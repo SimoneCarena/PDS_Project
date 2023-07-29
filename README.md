@@ -16,3 +16,17 @@ As a bonus, the application may also provide the following features:
 8. **Save Options**: The utility should allow users to specify the default save location for screen grabs. It should also support automatic saving with predefined naming conventions.
 9. **Multi-monitor Support**: The utility should be able to recognize and handle
 multiple monitors independently, allowing users to grab screens from any of the connected displays.
+
+## Crates Depenedencies
+
+screenshot crate: screenshots
+
+```{bash}
+cargo add screenshots
+```
+
+gui crate: egui
+
+```{bash}
+cargo add egui
+```
