@@ -36,3 +36,7 @@ hotkeys crate: global-hotkey
 ```{bash}
 cargo add global-hotkey
 ```
+
+image manipulation crate: image 
+```{bash} 
+cargo add image ```

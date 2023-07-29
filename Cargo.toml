@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 egui = "0.22.0"
 global-hotkey = "0.2.3"
+image = "0.24.6"
 screenshots = "0.7.0"
