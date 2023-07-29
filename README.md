@@ -20,24 +20,13 @@ multiple monitors independently, allowing users to grab screens from any of the 
 ## Crates Depenedencies
 
 screenshot crate: screenshots
-
-```{bash}
-cargo add screenshots
-```
-
 gui crate: egui
-
-```{bash}
-cargo add egui
-```
-
 hotkeys crate: global-hotkey
-
-```{bash}
-cargo add global-hotkey
-```
-
 image manipulation crate: image 
-```{bash} 
-cargo add image
+
+```{toml}
+egui = "0.22.0"
+global-hotkey = "0.2.3"
+image = "0.24.6"
+screenshots = "0.7.0"
 ```
