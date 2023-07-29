@@ -39,4 +39,5 @@ cargo add global-hotkey
 
 image manipulation crate: image 
 ```{bash} 
-cargo add image ```
+cargo add image
+```
