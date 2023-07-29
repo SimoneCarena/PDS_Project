@@ -30,3 +30,9 @@ gui crate: egui
 ```{bash}
 cargo add egui
 ```
+
+hotkeys crate: global-hotkey
+
+```{bash}
+cargo add global-hotkey
+```
