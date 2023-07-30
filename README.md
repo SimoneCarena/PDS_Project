@@ -25,7 +25,7 @@ hotkeys crate: global-hotkey\
 image manipulation crate: image and imageproc\
 text manipulation crate: rustype\
 error definition crate: thiserror\
-home directory utility crate: home\
+home directory utility crate: home
 
 ```{toml}
 egui = "0.22.0"
