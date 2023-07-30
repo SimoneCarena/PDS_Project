@@ -19,14 +19,21 @@ multiple monitors independently, allowing users to grab screens from any of the 
 
 ## Crates Depenedencies
 
-screenshot crate: screenshots
-gui crate: egui
-hotkeys crate: global-hotkey
-image manipulation crate: image 
+screenshot crate: screenshots\
+gui crate: egui\
+hotkeys crate: global-hotkey\
+image manipulation crate: image and imageproc\
+text manipulation crate: rustype\
+error definition crate: thiserror\
+home directory utility crate: home\
 
 ```{toml}
 egui = "0.22.0"
 global-hotkey = "0.2.3"
+home = "0.5.5"
 image = "0.24.6"
+imageproc = "0.23.0"
+rusttype = "0.9.3"
 screenshots = "0.7.0"
+thiserror = "1.0.44"
 ```
