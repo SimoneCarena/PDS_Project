@@ -43,7 +43,6 @@ multiple monitors independently, allowing users to grab screens from any of the 
     - [github](https://github.com/dtolnay/thiserror)
 - home directory utility crate: *home*
     - [crates.io](https://crates.io/crates/home)
-    - [gitlab](https://gitlab.redox-os.org/redox-os/rusttype)
 - clipboard crate: *arboard*
     - [crates.io](https://crates.io/crates/arboard)
     - [github](https://github.com/1Password/arboard)
