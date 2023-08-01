@@ -28,11 +28,11 @@ multiple monitors independently, allowing users to grab screens from any of the 
 - hotkeys crate: *global-hotkey*
     - [crates.io](https://crates.io/crates/global-hotkey)
     - [github](https://github.com/tauri-apps/global-hotkey)
-- image manipulation crates
-    - *image*:
+- image manipulation crates:
+    - *image*
         - [crates.io](https://crates.io/crates/image)
         - [github](https://github.com/image-rs/image)
-    - *imageproc*:
+    - *imageproc*
         - [crates.io](https://crates.io/crates/imageproc)
         - [github](https://github.com/image-rs/imageproc)
 - text manipulation crate: *rusttype*
