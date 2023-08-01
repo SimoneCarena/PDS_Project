@@ -19,32 +19,32 @@ multiple monitors independently, allowing users to grab screens from any of the 
 
 ## Crates Depenedencies
 
-- screenshot crate: *screenshots*:
+- screenshot crate: *screenshots*
     - [crates.io](https://crates.io/crates/screenshots)
     - [github](https://github.com/nashaofu/screenshots-rs)
-- gui crate: *egui*:
+- gui crate: *egui*
     - [crates.io](https://crates.io/crates/egui)
     - [github](https://github.com/emilk/egui)
-- hotkeys crate: *global-hotkey*:
+- hotkeys crate: *global-hotkey*
     - [crates.io](https://crates.io/crates/global-hotkey)
     - [github](https://github.com/tauri-apps/global-hotkey)
-- image manipulation crates:
+- image manipulation crates
     - *image*:
         - [crates.io](https://crates.io/crates/image)
         - [github](https://github.com/image-rs/image)
     - *imageproc*:
         - [crates.io](https://crates.io/crates/imageproc)
         - [github](https://github.com/image-rs/imageproc)
-- text manipulation crate: *rusttype*:
+- text manipulation crate: *rusttype*
     - [crates.io](https://crates.io/crates/rusttype)
     - [gitlab](https://gitlab.redox-os.org/redox-os/rusttype)
-- error definition crate: *thiserror*:
+- error definition crate: *thiserror*
     - [crates.io](https://crates.io/crates/thiserror)
     - [github](https://github.com/dtolnay/thiserror)
-- home directory utility crate: *home*:
+- home directory utility crate: *home*
     - [crates.io](https://crates.io/crates/home)
     - [gitlab](https://gitlab.redox-os.org/redox-os/rusttype)
-- clipboard crate: *arboard*:
+- clipboard crate: *arboard*
     - [crates.io](https://crates.io/crates/arboard)
     - [github](https://github.com/1Password/arboard)
 
