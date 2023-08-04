@@ -110,24 +110,23 @@ impl eframe::App for MyApp {
             for op in &self.hk.get_all_shortcuts(){
                 if op.get_id() == id {
                     match op.get_name().as_str(){
-                        "New capture" => {match take_capture(&self.screens[0]) {
-                            None => {} // eventualmente da gestire
-                            Some(im) => {self.image = Some(ctx.load_texture(
-                                "my-image",
-                                get_image(".tmp.png", 0, 0, 1, 1),
-                                Default::default()
-                            )); self.status = Image;}
-                        }},
-                        "Delay Capture"=> {
-                            sleep(Duration::from_secs(self.delay_secs as u64));
-                            match take_capture(&self.screens[0]) {
-                                None => {} // eventualmente da gestire
-                                Some(im) => {self.image = Some(ctx.load_texture(
-                                    "my-image",
-                                    get_image(".tmp.png", 0, 0, 1, 1),
-                                    Default::default()
-                                )); self.status = Image;}
-                            }},
+                        "New capture" => {
+                            frame.set_visible(false);
+                            self.disabled_time = ctx.input(|i| i.time);
+                            self.prev = self.status.clone();
+                            self.instant_flag = true;
+                            self.status = Hidden;
+                        },
+                        "Save capture" => {
+                            self.image_to_save.as_ref().unwrap().save(self.extension).unwrap();
+                        },
+                        "Delay capture" => {
+                            frame.set_visible(false);
+                            self.disabled_time = ctx.input(|i| i.time);
+                            self.prev = self.status.clone();
+                            self.instant_flag = false;
+                            self.status = Hidden;
+                        },
                         "Copy to clipboard" => {
                             self.image_to_save.as_ref().unwrap().copy_to_clipboard(&mut self.clipboard).unwrap();
                         },
