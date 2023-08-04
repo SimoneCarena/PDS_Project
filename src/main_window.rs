@@ -343,12 +343,14 @@ fn hidden_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame
 fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
     //pulsanti
     egui::CentralPanel::default().show(ctx, |ui| {
+        let window_size = Vec2::new(ctx.screen_rect().width()-5.0, ctx.screen_rect().height()-60.0);
+        let image_size =  app.image.as_ref().unwrap().size_vec2();
+        app.window_image_ratio = min_my(window_size.y/image_size.y, window_size.x/image_size.x);
+
         match ctx.input(|i| i.pointer.hover_pos()) {
             Some(pos) => {
-                let image_size = app.image.as_ref().unwrap().size_vec2();
                 let offset = (ctx.screen_rect().width() - app.image.as_ref().unwrap().size_vec2().x * app.window_image_ratio) / 2.0;
 
-                //println!("{:?}", (pos.x, pos.y));
                 let ((x,y),(w,h)) = app.bl_ar.as_ref().unwrap().get_crop_data();
                 let upleft = (x,y);
                 let upright = (x+w,y);
