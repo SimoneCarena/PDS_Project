@@ -1,5 +1,5 @@
 [package]
-name = "screenshot_utility"
+name = "test_screenshots"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,8 +7,6 @@ edition = "2021"
 
 [dependencies]
 arboard = "3.2.0"
-egui = "0.22.0"
-global-hotkey = "0.2.3"
 home = "0.5.5"
 image = "0.24.6"
 imageproc = "0.23.0"
@@ -21,3 +19,4 @@ opt-level = 0
 
 [profile.release]
 opt-level = 3
+

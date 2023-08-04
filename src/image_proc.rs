@@ -44,7 +44,7 @@ impl Image {
         )
     }
     ///Creates an Image from an existing DynamicImage
-    fn from_image(image: DynamicImage) -> Self {
+    pub fn from_image(image: DynamicImage) -> Self {
         let width = image.width();
         let height = image.height();
         Self {
@@ -261,12 +261,11 @@ impl Image {
     }
     ///Returns the image with all the layers stacked
     ///The original image is cloned, and all the layers are merged
-    pub fn show(&self) -> Image {
+    pub fn show(&self) -> DynamicImage {
         let mut image  = self.base.clone();
         for layer in &self.layers {
             image::imageops::overlay(&mut image, &layer.layer, 0, 0);
         }
-        let image = Image::from_image(image);
         image
     }
     ///Copies the image to the clipboard
@@ -276,7 +275,7 @@ impl Image {
         let image_cb = arboard::ImageData{
             width: image.width() as usize,
             height: image.height() as usize,
-            bytes: Cow::from(image.base.as_bytes())
+            bytes: Cow::from(image.as_bytes())
         };
         clipboard.set_image(image_cb)?;
         Ok(())

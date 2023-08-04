@@ -1,5 +1,6 @@
 use image::DynamicImage;
 
+#[derive(Debug, Clone)]
 pub struct BlurArea{
     image: DynamicImage,
     blur: DynamicImage,

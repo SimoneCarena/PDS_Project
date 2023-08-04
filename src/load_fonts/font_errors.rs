@@ -8,7 +8,7 @@ pub enum LoadFontError{
     #[error("Unsupported OS")]
     OSError,
 
-    #[error("Cannot find andy font")]
+    #[error("Cannot find any font")]
     FontSourceError,
 
     #[error("Invalid File name")]
