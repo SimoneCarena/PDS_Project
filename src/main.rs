@@ -4,6 +4,8 @@ mod hotkey_popup;
 mod main_window;
 mod screensh;
 mod image_proc;
+mod load_fonts;
+mod cursor_scaling;
 
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Display, Formatter};
