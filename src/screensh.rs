@@ -3,6 +3,7 @@ pub mod screensh_errors;
 use std::fs::File;
 use std::io::Write;
 use screensh_errors::ScreenshotError;
+use eframe::egui::Vec2;
 
 pub struct Screen {
     screen: screenshots::Screen,
