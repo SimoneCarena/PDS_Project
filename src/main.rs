@@ -1,56 +1,75 @@
+//#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
+
+mod hotkey_popup;
+mod main_window;
 mod screensh;
 mod image_proc;
-mod load_fonts;
-mod cursor_scaling;
 
-use std::fs;
-use cursor_scaling::*;
-use image_proc::extensions::Extensions;
+use std::collections::{HashMap, HashSet};
+use std::fmt::{Display, Formatter};
+use eframe::egui;
+//use eframe::epaint::image;
+//use eframe::egui::accesskit::Role::Status;
+use global_hotkey::{hotkey::HotKey, GlobalHotKeyEvent, GlobalHotKeyManager};
+use keyboard_types::{Code, Modifiers};
+use crate::main_window::*;
+use crate::hotkey_popup::*;
 
-use crate::image_proc::Image;
 
-fn main() {
 
-    let mut screen = screensh::Screen::get_screens().unwrap();
-    let screen = &mut screen[0];
-    let image = screen.capture().unwrap();
-    image.save().unwrap();
+fn main() -> Result<(), eframe::Error> {
+    //let manager = GlobalHotKeyManager::new().unwrap();
 
-    let mut image = image_proc::Image::open(".tmp.png").unwrap();
-    let w = image.width();
-    let h = image.height();
-    image.save(Extensions::PNG).unwrap();
-    
-    let mut blur = image.blur_area(0, 0, w, h);
-    let ((x,y),(w,h)) = blur.get_crop_data();
-    println!("{} {} {} {}",x,y,w,h);
+    /*let hotkey1: HotKey = "shift+alt+KeyA".parse().unwrap();
+    let hotkey4 = HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyC);*/
 
-    let ((nx,ny),(nw,nh)) = get_new_area((x,y), (1000,1000), (x,y), (w,h), Corner::UpLeft);
-    println!("{} {} {} {}",nx,ny,nw,nh);
-    blur.resize((nx,ny), (nw,nh));
-    Image::from_image(blur.show()).save(Extensions::PNG).unwrap();
+    /*println!("{}", hotkey.id());
+    println!("{}", hotkey2.id());
+    println!("{}", hotkey3.id());
+    println!("{}", hotkey4.id()); */
 
-    let ((x,y),(w,h)) = blur.get_crop_data();
-    let ((nx,ny),(nw,nh)) = get_new_area((x+w,y+h), (x+w-200,y+h-200), (x,y), (w,h), Corner::DownRight);
-    println!("{} {} {} {}",nx,ny,nw,nh);
-    blur.resize((nx,ny), (nw,nh));
-    Image::from_image(blur.show()).save(Extensions::PNG).unwrap();
+    /*manager.register(hotkey1).unwrap();
+    manager.register(hotkey4).unwrap();*/
 
-    let ((x,y),(w,h)) = blur.get_crop_data();
-    let ((nx,ny),(nw,nh)) = get_new_area((x+w,y), (x+w-200,y+200), (x,y), (w,h), Corner::UpRight);
-    println!("{} {} {} {}",nx,ny,nw,nh);
-    blur.resize((nx,ny), (nw,nh));
-    Image::from_image(blur.show()).save(Extensions::PNG).unwrap();
+    //return Ok(());
 
-    let ((x,y),(w,h)) = blur.get_crop_data();
-    let ((nx,ny),(nw,nh)) = get_new_area((x,y+h), (x+500,y+h-500), (x,y), (w,h), Corner::DownLeft);
-    println!("{} {} {} {}",nx,ny,nw,nh);
-    blur.resize((nx,ny), (nw,nh));
-    Image::from_image(blur.show()).save(Extensions::PNG).unwrap();
+    let native_options = eframe::NativeOptions{
+        resizable: true,
+        min_window_size: Some(egui::Vec2::new(650.0, 450.0)),
+        initial_window_size: Some(egui::Vec2::new(650.0, 450.0)),
+        //icon_data: Some(load_icon("/path/to/icon.png")),
+        ..Default::default()
+    };
 
-    image.crop(blur);
-    image.save(Extensions::PNG).unwrap();
+    eframe::run_native(
+        "Screenshot Tool",
+        native_options.clone(),
+        Box::new(|cc| Box::<MyApp>::new(MyApp::new(cc)))
+    ).expect("TODO: panic message");
 
-    fs::remove_file(".tmp.png").unwrap();
-
+    Ok(())
 }
+
+/*fn load_icon(path: &str) -> eframe::IconData {
+    let (icon_rgba, icon_width, icon_height) = {
+        let image =
+            .expect("Failed to open icon path")
+            .into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        (rgba, width, height)
+    };
+
+    eframe::IconData {
+        rgba: icon_rgba,
+        width: icon_width,
+        height: icon_height,
+    }
+}*/
+
+/*impl Display for Code{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+
+    }
+}*/
+
