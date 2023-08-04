@@ -292,6 +292,12 @@ pub fn get_image(filepath: &str, ix: u32, iy: u32, iw: u32, ih: u32) -> egui::Im
     img
 }
 
+pub fn get_image_from_memory(di: DynamicImage, ix: u32, iy: u32, iw: u32, ih: u32) -> egui::ImageData {
+    let color_image = load_image_from_memory(di).unwrap();
+    let img = egui::ImageData::from(color_image);
+    img
+}
+
 pub fn load_image_from_path(path: &std::path::Path) -> Result<egui::ColorImage, image::ImageError> {
     let image = image::io::Reader::open(path)?.decode()?;
     let size = [image.width() as _, image.height() as _];
@@ -303,10 +309,9 @@ pub fn load_image_from_path(path: &std::path::Path) -> Result<egui::ColorImage, 
     ))
 }
 
-pub fn load_image_from_memory(image_data: Vec<u8>) -> Result<egui::ColorImage, image::ImageError> {
-    let image = image::load_from_memory(&image_data)?;
-    let size = [image.width() as _, image.height() as _];
-    let image_buffer = image.to_rgba8();
+pub fn load_image_from_memory(image_data: DynamicImage) -> Result<egui::ColorImage, image::ImageError> {
+    let size = [image_data.width() as _, image_data.height() as _];
+    let image_buffer = image_data.to_rgba8();
     let pixels = image_buffer.as_flat_samples();
     Ok(egui::ColorImage::from_rgba_unmultiplied(
         size,

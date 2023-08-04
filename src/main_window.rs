@@ -15,9 +15,11 @@ use keyboard_types::{Code, Modifiers};
 use crate::hotkey_popup::*;
 use crate::main_window::Status::*;
 use crate::{image_proc, screensh};
+use crate::cursor_scaling::{Corner, get_new_area};
 use crate::screensh::{Screen, Screenshot};
 use crate::screensh::screensh_errors::ScreenshotError;
-use crate::image_proc::{get_image, load_image_from_memory};
+use crate::image_proc::{get_image, get_image_from_memory, load_image_from_memory};
+use crate::image_proc::blur_area::BlurArea;
 use crate::image_proc::load_image_from_path;
 use crate::image_proc::Image;
 use crate::image_proc::extensions::Extensions;
@@ -30,6 +32,7 @@ pub enum Status{
     Settings,
     Image,
     Hidden,
+    Crop,
 }
 
 impl Default for Status{
@@ -63,6 +66,10 @@ pub struct MyApp {
     any_pressed: bool,
     sel_screen: usize,
     window_image_ratio: f32,
+    corner: Option<Corner>,
+    bl_ar: Option<BlurArea>,
+    prev_mouse_pos: Option<(u32, u32)>,
+    cur_mouse_pos: Option<(u32, u32)>,
 }
 
 impl MyApp {
@@ -87,6 +94,10 @@ impl MyApp {
             any_pressed: false,
             sel_screen: 0usize,
             window_image_ratio: 0.2,  //default
+            corner: None,
+            bl_ar: None,
+            prev_mouse_pos: None,
+            cur_mouse_pos: None,
         };
 
         ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyA)).unwrap();
@@ -151,6 +162,9 @@ impl eframe::App for MyApp {
             }
             Hidden => {
                 hidden_window(self, ctx, frame);
+            }
+            Crop => {
+                crop_window(self, ctx, frame);
             }
         }
     }
@@ -226,6 +240,9 @@ fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame)
                 let w = app.image_to_save.as_ref().unwrap().width();
                 let h = app.image_to_save.as_ref().unwrap().height();
                 let blur = app.image_to_save.as_ref().unwrap().blur_area(0, 0, w, h);
+                app.bl_ar = Some(blur);
+                app.prev = app.status;
+                app.status = Crop;
             }
 
             if ui.button("✏ Draw").on_hover_text("Draw over the capture").clicked(){
@@ -293,62 +310,7 @@ fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame)
         //println!("{:?}", ctx.input(|i| i.pointer.hover_pos()));
 
 
-        match ctx.input(|i| i.pointer.hover_pos()){
-            Some(pos) => {
-                let image_size = app.image.as_ref().unwrap().size_vec2();
-                let offset = (ctx.screen_rect().width()-app.image.as_ref().unwrap().size_vec2().x*app.window_image_ratio)/2.0;
-                // alto a sx
-                if (pos.x-offset > 0.0 && pos.x-offset < 10.0) && (pos.y > 25.0 && pos.y < 45.0){
-                    //println!("Angolo!!");
-                    if ctx.input(|i| i.pointer.any_pressed()){
-                        app.any_pressed = true;
-                        println!("pressed");
-                    }
-                    /*else if ctx.input(|i| i.pointer.any_released()){
-                        println!("released");
-                    }*/
-                }
-                    //basso a sx
-                else if (pos.x-offset > 0.0 && pos.x-offset < 10.0) && ((pos.y > (image_size.y*app.window_image_ratio)+10.0) && (pos.y < (image_size.y*app.window_image_ratio)+30.0)){
-                    //println!("Angolo!!");
-                    if ctx.input(|i| i.pointer.any_pressed()){
-                        app.any_pressed = true;
-                        println!("pressed");
-                    }
-                    /*else if ctx.input(|i| i.pointer.any_released()){
-                        println!("released");
-                    }*/
-                }
-                    //alto a dx
-                else if ((pos.x-offset > (image_size.x*app.window_image_ratio)-10.0) && (pos.x-offset < (image_size.x*app.window_image_ratio)+10.0)) && (pos.y > 25.0 && pos.y < 45.0){
-                    //println!("Angolo!!");
-                    if ctx.input(|i| i.pointer.any_pressed()){
-                        app.any_pressed = true;
-                        println!("pressed");
-                    }
-                    /*else if ctx.input(|i| i.pointer.any_released()){
-                        println!("released");
-                    }*/
-                }
-                    //basso a dx
-                else if ((pos.x-offset > (image_size.x*app.window_image_ratio)-10.0) && (pos.x-offset < (image_size.x*app.window_image_ratio)+10.0)) && ((pos.y > (image_size.y*app.window_image_ratio)+10.0) && (pos.y < (image_size.y*app.window_image_ratio)+30.0)){
-                    //println!("Angolo!!");
-                    if ctx.input(|i| i.pointer.any_pressed()){
-                        app.any_pressed = true;
-                        println!("pressed");
-                    }
-                    /*else if ctx.input(|i| i.pointer.any_released()){
-                        println!("released");
-                    }*/
-                }
 
-                if ctx.input(|i| i.pointer.any_released()) && app.any_pressed{
-                    println!("released");
-                    app.any_pressed = false;
-                }
-            }
-            None => {}
-        }
     });
 }
 
@@ -520,6 +482,106 @@ fn settings_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
             });
 
     });
+}
+
+fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
+    //pulsanti
+    egui::CentralPanel::default().show(ctx, |ui| {
+        match ctx.input(|i| i.pointer.hover_pos()) {
+            Some(pos) => {
+                let image_size = app.image.as_ref().unwrap().size_vec2();
+                let offset = (ctx.screen_rect().width() - app.image.as_ref().unwrap().size_vec2().x * app.window_image_ratio) / 2.0;
+
+
+                // alto a sx
+                if (pos.x - offset > 0.0 && pos.x - offset < 10.0) && (pos.y > 25.0 && pos.y < 45.0) {
+                    println!("Angolo!!");
+                    if ctx.input(|i| i.pointer.any_pressed()) {
+                        app.any_pressed = true;
+                        app.corner = Some(Corner::UpLeft);
+                        println!("pressed");
+                    }
+                }
+                //basso a sx
+                else if (pos.x - offset > 0.0 && pos.x - offset < 10.0) && ((pos.y > (image_size.y * app.window_image_ratio) + 10.0) && (pos.y < (image_size.y * app.window_image_ratio) + 30.0)) {
+                    println!("Angolo!!");
+                    if ctx.input(|i| i.pointer.any_pressed()) {
+                        app.any_pressed = true;
+                        app.corner = Some(Corner::DownLeft);
+                        println!("pressed");
+                    }
+                }
+                //alto a dx
+                else if ((pos.x - offset > (image_size.x * app.window_image_ratio) - 10.0) && (pos.x - offset < (image_size.x * app.window_image_ratio) + 10.0)) && (pos.y > 25.0 && pos.y < 45.0) {
+                    println!("Angolo!!");
+                    if ctx.input(|i| i.pointer.any_pressed()) {
+                        app.corner = Some(Corner::UpRight);
+                        app.any_pressed = true;
+                        println!("pressed");
+                    }
+                }
+                //basso a dx
+                else if ((pos.x - offset > (image_size.x * app.window_image_ratio) - 10.0) && (pos.x - offset < (image_size.x * app.window_image_ratio) + 10.0)) && ((pos.y > (image_size.y * app.window_image_ratio) + 10.0) && (pos.y < (image_size.y * app.window_image_ratio) + 30.0)) {
+                    println!("Angolo!!");
+                    if ctx.input(|i| i.pointer.any_pressed()) {
+                        app.corner = Some(Corner::DownLeft);
+                        app.any_pressed = true;
+                        println!("pressed");
+                    }
+                }
+
+                if app.any_pressed {
+                    match app.cur_mouse_pos {
+                        None => {}
+                        Some(p) => {
+                            app.prev_mouse_pos = Some(p);
+                        }
+                    }
+
+                    app.cur_mouse_pos = Some((pos.x as u32, pos.y as u32));
+
+                    match app.prev_mouse_pos {
+                        None => {}
+                        Some(p) => {
+                            let ((x, y), (w, h)) = app.bl_ar.as_ref().unwrap().get_crop_data();
+
+                            let ((xn, yn), (wn, hn)) = get_new_area(
+                                app.prev_mouse_pos.unwrap(),
+                                app.cur_mouse_pos.unwrap(),
+                                (x, y),
+                                (w, h),
+                                app.corner.unwrap()
+                            );
+
+                            app.bl_ar.as_mut().unwrap().resize((xn, yn), (wn, hn));
+                            let di = app.bl_ar.as_ref().unwrap().show();
+
+                            app.image = Some(ctx.load_texture(
+                                "my-image",
+                                get_image_from_memory(di, 0, 0, 1, 1),
+                                Default::default()
+                            ));
+
+
+                        }
+                    }
+                }
+
+                ui.vertical_centered(|ui| {
+                    ui.add(egui::Image::new(app.image.as_ref().unwrap(),
+                                            app.image.as_ref().unwrap().size_vec2() * app.window_image_ratio));
+                });
+
+                if ctx.input(|i| i.pointer.any_released()) && app.any_pressed {
+                    println!("released");
+                    app.any_pressed = false;
+                    app.corner = None;
+                }
+            }
+            None => {}
+        }
+    });
+
 }
 
 fn take_capture(screen: &Screen) -> Option<Image> {

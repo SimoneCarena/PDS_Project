@@ -1,3 +1,4 @@
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub enum Corner {
     UpLeft,
     UpRight,
