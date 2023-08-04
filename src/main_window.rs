@@ -349,48 +349,55 @@ fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                 let offset = (ctx.screen_rect().width() - app.image.as_ref().unwrap().size_vec2().x * app.window_image_ratio) / 2.0;
 
                 //println!("{:?}", (pos.x, pos.y));
-                let mut c1 = app.anchor_corner.unwrap().0;  // UpLeft
-                let mut c2 = app.anchor_corner.unwrap().0;  // UpRight
-                c2.0 = c1.0 + image_size.x;
-                let mut c3 = app.anchor_corner.unwrap().0;  // DownLeft
-                let mut c4 = app.anchor_corner.unwrap().0;  // DownRight*/
+                let ((x,y),(w,h)) = app.bl_ar.as_ref().unwrap().get_crop_data();
+                let upleft = (x,y);
+                let upright = (x+w,y);
+                let downleft = (x,y+h);
+                let downright = (x+w,y+h);
 
-
+                let c1 = cursor_position(upleft, 1.0/app.window_image_ratio);
+                let c1 = (c1.0 as f32, c1.1 as f32);
+                let c2 = cursor_position(upright, 1.0/app.window_image_ratio);
+                let c2 = (c2.0 as f32, c2.1 as f32);
+                let c3 = cursor_position(downleft, 1.0/app.window_image_ratio);
+                let c3 = (c3.0 as f32, c3.1 as f32);
+                let c4 = cursor_position(downright, 1.0/app.window_image_ratio);
+                let c4 = (c4.0 as f32, c4.1 as f32);
 
                 // alto a sx
                 if (pos.x - offset > c1.0 && pos.x - offset < c1.0+10.0) && (pos.y > c1.1 && pos.y < c1.1+20.0) {
-                    println!("Angolo!!");
+                    //println!("Angolo!!");
                     if ctx.input(|i| i.pointer.any_pressed()) {
                         app.any_pressed = true;
                         app.corner = Some(Corner::UpLeft);
-                        println!("pressed");
+                        //println!("pressed");
                     }
                 }
                 //basso a sx
-                else if (pos.x - offset > c1.0 && pos.x - offset < c1.0+10.0) && ((pos.y > (image_size.y * app.window_image_ratio) -10.0) && (pos.y < (image_size.y * app.window_image_ratio) + 10.0)) {
-                    println!("Angolo!!");
+                else if (pos.x - offset > c3.0 && pos.x - offset < c3.0+10.0) && ((pos.y > c3.1 -10.0) && (pos.y < c3.1 + 10.0)) {
+                    //println!("Angolo!!");
                     if ctx.input(|i| i.pointer.any_pressed()) {
                         app.any_pressed = true;
                         app.corner = Some(Corner::DownLeft);
-                        println!("pressed");
+                        //println!("pressed");
                     }
                 }
                 //alto a dx
-                else if ((pos.x - offset > (image_size.x * app.window_image_ratio) - 10.0) && (pos.x - offset < (image_size.x * app.window_image_ratio) + 10.0)) && (pos.y > c1.1 && pos.y < c1.1+20.0) {
-                    println!("Angolo!!");
+                else if ((pos.x - offset > c2.0 - 10.0) && (pos.x - offset < c2.0 + 10.0)) && (pos.y > c2.1 && pos.y < c2.1+20.0) {
+                    //println!("Angolo!!");
                     if ctx.input(|i| i.pointer.any_pressed()) {
                         app.corner = Some(Corner::UpRight);
                         app.any_pressed = true;
-                        println!("pressed");
+                        //println!("pressed");
                     }
                 }
                 //basso a dx
-                else if ((pos.x - offset > (image_size.x * app.window_image_ratio) - 10.0) && (pos.x - offset < (image_size.x * app.window_image_ratio) + 10.0)) && ((pos.y > (image_size.y * app.window_image_ratio) - 10.0) && (pos.y < (image_size.y * app.window_image_ratio) + 10.0)) {
-                    println!("Angolo!!");
+                else if ((pos.x - offset > c4.0 - 10.0) && (pos.x - offset < c4.0 + 10.0)) && ((pos.y > c4.1 - 10.0) && (pos.y < c4.1 + 10.0)) {
+                    //println!("Angolo!!");
                     if ctx.input(|i| i.pointer.any_pressed()) {
-                        app.corner = Some(Corner::DownLeft);
+                        app.corner = Some(Corner::DownRight);
                         app.any_pressed = true;
-                        println!("pressed");
+                        //println!("pressed");
                     }
                 }
 
@@ -410,7 +417,7 @@ fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                         None => {}
                         Some(p) => {
                             let ((x, y), (w, h)) = app.bl_ar.as_ref().unwrap().get_crop_data();
-                            println!("{:?} {:?}", app.prev_mouse_pos.unwrap(), app.cur_mouse_pos.unwrap());
+                            //println!("{:?} {:?}", app.prev_mouse_pos.unwrap(), app.cur_mouse_pos.unwrap());
 
                             let ((xn, yn), (wn, hn)) = get_new_area(
                                 app.prev_mouse_pos.unwrap(),
@@ -441,7 +448,7 @@ fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                 }
 
                 if ctx.input(|i| i.pointer.any_released()) && app.any_pressed {
-                    println!("released");
+                    //println!("released");
                     app.any_pressed = false;
 
                     app.corner = None;
