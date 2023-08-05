@@ -37,9 +37,9 @@ fn main() -> Result<(), eframe::Error> {
 
     let native_options = eframe::NativeOptions{
         resizable: true,
-        min_window_size: Some(egui::Vec2::new(650.0, 450.0)),
+        min_window_size: Some(egui::Vec2::new(650.0, 300.0)),
         initial_window_size: Some(egui::Vec2::new(650.0, 450.0)),
-        //icon_data: Some(load_icon("/path/to/icon.png")),
+        icon_data: Some(load_icon("icon.png")),
         ..Default::default()
     };
 
@@ -52,9 +52,9 @@ fn main() -> Result<(), eframe::Error> {
     Ok(())
 }
 
-/*fn load_icon(path: &str) -> eframe::IconData {
+fn load_icon(path: &str) -> eframe::IconData {
     let (icon_rgba, icon_width, icon_height) = {
-        let image =
+        let image = image::open(path)
             .expect("Failed to open icon path")
             .into_rgba8();
         let (width, height) = image.dimensions();
@@ -67,7 +67,7 @@ fn main() -> Result<(), eframe::Error> {
         width: icon_width,
         height: icon_height,
     }
-}*/
+}
 
 /*impl Display for Code{
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
