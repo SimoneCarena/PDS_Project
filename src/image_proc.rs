@@ -289,6 +289,25 @@ impl Image {
         let color = Color::new(0, 0, 0, 0.0);
         Image::draw_point(layer, prev, current, size, &color)
     }
+
+    pub fn highlight_init(&self) -> (Layer, Layer) {
+        let base = self.layers[0].clone();
+        let base = Layer::new(base,LayerType::FreeHandDrawing);
+        let width = base.layer.width();
+        let height = base.layer.height();
+        let canva = RgbaImage::new(width, height);
+        let canva = Layer::new(DynamicImage::ImageRgba8(canva), LayerType::Shape);
+        (base, canva)
+    }
+    pub fn highlight_set(&mut self, mut layer: Layer, base: &Layer, last: (i32, i32), size: i32, color: &Color) {
+        imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, last, size/2, color.color);
+        let layer = layer.show_higlight(base);
+        self.layers.push_front(layer);
+    }
+    pub fn highlight(layer: &mut Layer, prev: Option<((i32, i32),(i32, i32),(i32, i32))>, current: (i32, i32), size: i32, color: &Color) -> ((i32, i32), (i32, i32), (i32, i32)) {
+        Image::draw_point(layer, prev, current, size, color)
+    }
+
     ///Remove the most recent created layer
     pub fn undo(&mut self) {
         self.layers.pop_front();

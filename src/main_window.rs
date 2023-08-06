@@ -50,6 +50,19 @@ impl Default for Status{
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum DrawStatus{
+    Draw,
+    Rubber,
+    Highlight
+}
+
+impl Default for DrawStatus{
+    fn default() -> Self{
+        DrawStatus::Draw
+    }
+}
+
 pub struct MyApp {
     prev: Status,
     status: Status,
@@ -92,8 +105,9 @@ pub struct MyApp {
     is_sel_color: bool,
     dropdown_on: bool,
     rubber: bool,
+    highlight: bool,
     rubber_layer: Option<Layer>,
-    last_crop_data: Option<((u32, u32), (u32, u32))>
+    last_crop_data: Option<((u32, u32), (u32, u32))>,
 }
 
 impl MyApp {
@@ -133,6 +147,7 @@ impl MyApp {
             is_sel_color: false,
             dropdown_on: false,
             rubber: false,
+            highlight: false,
             rubber_layer: None,
             last_crop_data: None
         };
@@ -225,6 +240,8 @@ impl eframe::App for MyApp {
                                 self.draw_layer = Some(self.image_to_save.as_ref().unwrap().free_hand_draw_init());
                                 self.backup_image = self.image.clone();
                                 self.backup_image_to_save = self.image_to_save.clone();
+                                self.highlight = false;
+                                self.rubber = false;
                                 self.status = Draw;
                             }
                         },
@@ -385,11 +402,12 @@ fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame)
                 app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
                 app.backup_image = app.image.clone();
                 app.backup_image_to_save = app.image_to_save.clone();
+                app.highlight = false;
                 app.rubber = false;
                 app.status = Draw;
             }
 
-            if ui.button("📝 Text").on_hover_text("Write some text over the capture").clicked(){
+            if ui.button("🇹 Text").on_hover_text("Write some text over the capture").clicked(){
                 app.backup_image = app.image.clone();
                 app.backup_image_to_save = app.image_to_save.clone();
                 app.prev = app.status;
@@ -586,6 +604,7 @@ fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                                 app.cur_mouse_pos.unwrap(),
                                 (x, y),
                                 (w, h),
+                                (app.image_to_save.as_ref().unwrap().width(),app.image_to_save.as_ref().unwrap().height()),
                                 app.corner.unwrap()
                             );
 
@@ -631,12 +650,14 @@ fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
             if ui.add(egui::Button::new("OK")).clicked() {
                 app.prev = app.status;
                 app.status = Image;
+                app.last_crop_data = Some(app.bl_ar.as_ref().unwrap().get_crop_data());
                 app.image_to_save.as_mut().unwrap().crop(app.bl_ar.take().unwrap());
                 app.image = Some(ctx.load_texture(
                     "my-image",
                     get_image_from_memory(app.image_to_save.as_ref().unwrap().show(), 0, 0, 1, 1),
                     Default::default()
                 ));
+
             }
 
             if ui.add(egui::Button::new("Back")).clicked(){
@@ -789,13 +810,40 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
         ui.horizontal(|ui| {
             ui.style_mut().visuals.override_text_color = Some(egui::Color32::WHITE);
             // color picker, thickness
-            if ui.button("🗑 Erase").on_hover_text("Erase annotations").clicked() {
+            if app.rubber {
+                if ui.button("✏ Draw").on_hover_text("Free-hand drawing").clicked(){
+                    app.highlight = false;
+                    app.rubber = !app.rubber;
+                    app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
+                }
+            }else{
+                if ui.button("🗑 Erase").on_hover_text("Erase annotations").clicked(){
+                app.highlight = false;
+                app.rubber = !app.rubber;
+                if app.rubber{
+                        let (rl, dl) = app.image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
+                        app.rubber_layer = Some(rl);
+                        app.draw_layer = Some(dl);
+                    }
+                }
+            }
+
+
+            /*if ui.button("🗑 Erase").on_hover_text("Erase annotations").clicked(){
+                app.highlight = false;
                 app.rubber = !app.rubber;
                 if app.rubber{
                     let (rl, dl) = app.image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
                     app.rubber_layer = Some(rl);
                     app.draw_layer = Some(dl);
                 }
+            }*/
+
+            if ui.button("📌 Highlight").on_hover_text("Activate highlighter").clicked(){
+                app.highlight = true;
+                let (rl, dl) = app.image_to_save.as_ref().unwrap().highlight_init();
+                app.rubber_layer = Some(rl);
+                app.draw_layer = Some(dl);
             }
         });
 
@@ -810,12 +858,17 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
             app.cur_mouse_pos = Some(scaled_pos);
 
             let cur = app.cur_mouse_pos.unwrap().clone();
-            if !app.rubber {
-                app.prev_edge = Some(Image::draw_point(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), 10, &image_proc::colors::Color::new(255, 255, 0, 1.0)));
-                di = app.draw_layer.as_ref().unwrap().show();
-            }else{
-                app.prev_edge = Some(Image::rubber(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), 10));
-                di = app.draw_layer.as_ref().unwrap().show_rubber(app.rubber_layer.as_ref().unwrap());
+            if !app.highlight {
+                if !app.rubber {
+                    app.prev_edge = Some(Image::draw_point(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), 10, &image_proc::colors::Color::new(255, 0, 0, 1.0)));
+                    di = app.draw_layer.as_ref().unwrap().show();
+                } else {
+                    app.prev_edge = Some(Image::rubber(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), 10));
+                    di = app.draw_layer.as_ref().unwrap().show_rubber(app.rubber_layer.as_ref().unwrap());
+                }
+            } else {
+                app.prev_edge = Some(Image::highlight(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), 10, &image_proc::colors::Color::new(255, 255, 0, 0.3)));
+                di = app.draw_layer.as_ref().unwrap().show_higlight(app.rubber_layer.as_ref().unwrap());
             }
 
             app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
@@ -824,12 +877,19 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
         if ctx.input(|i| i.pointer.any_released()) && app.any_pressed {
             app.any_pressed = false;
 
-            if !app.rubber {
-                app.image_to_save.as_mut().unwrap().free_hand_draw_set(app.draw_layer.take().unwrap(), app.prev_edge.unwrap().clone().2, 5, &image_proc::colors::Color::new(255, 0, 0, 1.0));
-                app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
+            if !app.highlight {
+                if !app.rubber {
+                    app.image_to_save.as_mut().unwrap().free_hand_draw_set(app.draw_layer.take().unwrap(), app.prev_edge.unwrap().clone().2, 5, &image_proc::colors::Color::new(255, 0, 0, 1.0));
+                    app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
+                } else {
+                    app.image_to_save.as_mut().unwrap().rubber_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, 5);
+                    let (rl, dl) = app.image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
+                    app.rubber_layer = Some(rl);
+                    app.draw_layer = Some(dl);
+                }
             } else {
-                app.image_to_save.as_mut().unwrap().rubber_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, 5);
-                let (rl, dl) = app.image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
+                app.image_to_save.as_mut().unwrap().highlight_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, 5, &image_proc::colors::Color::new(255, 255, 0, 0.3));
+                let (rl, dl) = app.image_to_save.as_ref().unwrap().highlight_init();
                 app.rubber_layer = Some(rl);
                 app.draw_layer = Some(dl);
             }
@@ -841,6 +901,7 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
         });
 
         ui.horizontal(|ui| {
+            ui.style_mut().visuals.override_text_color = Some(egui::Color32::WHITE);
             if ui.add(egui::Button::new("OK")).clicked() {
                 app.prev = app.status;
                 app.status = Image;
