@@ -173,9 +173,12 @@ impl Default for HotKeyPopUp {
         Self {
             shortcuts: vec![
                 Operation::new(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyA), "New capture".to_string(), true, true, false, Code::KeyA),
-                Operation::new(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyB), "Save capture".to_string(), true, true, false, Code::KeyB),
-                Operation::new(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyC), "Delay capture".to_string(), true, true, false, Code::KeyC),
-                Operation::new(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyD), "Copy to clipboard".to_string(), true, true, false, Code::KeyD)
+                Operation::new(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyB), "Delay capture".to_string(), true, true, false, Code::KeyB),
+                Operation::new(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyC), "Crop capture".to_string(), true, true, false, Code::KeyC),
+                Operation::new(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyD), "Draw capture".to_string(), true, true, false, Code::KeyD),
+                Operation::new(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyE), "Text capture".to_string(), true, true, false, Code::KeyE),
+                Operation::new(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyF), "Copy to clipboard".to_string(), true, true, false, Code::KeyF),
+                Operation::new(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyG), "Save capture".to_string(), true, true, false, Code::KeyG)
             ]
         }
     }

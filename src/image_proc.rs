@@ -6,6 +6,7 @@ pub mod layer;
 pub mod blur_area;
 
 use image::{DynamicImage, RgbaImage};
+use imageproc::point::Point;
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::fs::File;
@@ -23,11 +24,10 @@ use eframe::egui;
 static UNNAMED_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 ///Structure containing the base screenshot, its size and the additional layers of editing applied to it
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Image {
     base: DynamicImage,
-    layers: VecDeque<Layer>,
-    size: (u32, u32)
+    layers: VecDeque<DynamicImage>
 }
 
 impl Image {
@@ -35,42 +35,28 @@ impl Image {
     ///In case of failure an ImageManipulationError is returned, with the IOError variant
     pub fn open(path: &str) -> Result<Self,ImageManipulationError> {
         let image = image::open(path)?;
-        let width = image.width();
-        let height = image.height();
+        let mut layers = VecDeque::new();
+        layers.push_front(image.clone());
         Ok(
             Self {
                 base: image,
-                layers: VecDeque::new(),
-                size: (width, height)
+                layers: layers
             }
         )
     }
-    ///Creates an Image from an existing DynamicImage
-    pub fn from_image(image: DynamicImage) -> Self {
-        let width = image.width();
-        let height = image.height();
-        Self {
-            base: image,
-            layers: VecDeque::new(),
-            size: (width, height)
-        }
-    }
     ///Return the width of the image
     pub fn width(&self) -> u32 {
-        return self.base.width();
+        return self.layers[0].width();
     }
     ///Returns the height of the image
     pub fn height(&self) -> u32 {
-        return self.base.height();
+        return self.layers[0].height();
     }
     ///Returns a BlurArea structure, used to dynamically show which part of the image is going to be cropped
     ///The BlurArea structure is manipulated directly to modify the crop area
     ///Takes as parameters the position of the left-upper angle of the crop area and its size
     pub fn blur_area(&self, x: u32, y: u32, width: u32, height: u32) -> BlurArea {
-        let mut image = self.base.clone();
-        for layer in &self.layers {
-            image::imageops::overlay(&mut image, &layer.layer, 0, 0);
-        }
+        let mut image = self.layers[0].clone();
         let mut blur = image.clone();
         blur = blur.brighten(100);
         BlurArea::new(image, blur, (x,y), (width,height))
@@ -81,134 +67,247 @@ impl Image {
     pub fn crop(&mut self, crop_area: BlurArea) {
         let ((x,y), (width, height)) = crop_area.get_crop_data();
         let cropped = crop_area.show().crop(x, y, width, height);
-        self.base = cropped;
-        self.layers.clear();
+        self.layers.push_front(cropped);
         
     }
     ///Flips the image orizontally
     pub fn flip_horizontally(&mut self) {
-        let flipped = self.base.fliph();
-        self.base = flipped;
-        for i in 0..self.layers.len() {
-            let flipped = self.layers[i].layer.fliph();
-            self.layers[i].layer = flipped;
-        }
+        let flipped = self.layers[0].fliph();
+        self.layers.pop_front();
+        self.layers.push_front(flipped);
     }
     ///Flips the image vertically
     pub fn flip_vertically(&mut self) {
-        let flipped = self.base.flipv();
-        self.base = flipped;
-        for i in 0..self.layers.len() {
-            let flipped = self.layers[i].layer.flipv();
-            self.layers[i].layer = flipped;
-        }
+        let flipped = self.layers[0].flipv();
+        self.layers.pop_front();
+        self.layers.push_front(flipped)
     }
     ///Rotates the image 90 degree clockwise
     pub fn rotate90cv(&mut self) {
-        let rotated = self.base.rotate90();
-        self.base = rotated;
-        for i in 0..self.layers.len() {
-            let rotated = self.layers[i].layer.rotate90();
-            self.layers[i].layer = rotated;
-        }
-        let tmp = self.size.0;
-        self.size.0 = self.size.1;
-        self.size.1 = tmp;
+        let rotated = self.layers[0].rotate90();
+        self.layers.pop_front();
+        self.layers.push_front(rotated);
+        
     }
     ///Rotates the image 180 degree clockwise
     pub fn rotate180cv(&mut self) {
-        let rotated = self.base.rotate180();
-        self.base = rotated;
-        for i in 0..self.layers.len() {
-            let rotated = self.layers[i].layer.rotate180();
-            self.layers[i].layer = rotated;
-        }
+        let rotated = self.layers[0].rotate180();
+        self.layers.pop_front();
+        self.layers.push_front(rotated);
     }
     ///Rotates the image 270 degree clockwise
     pub fn rotate270cv(&mut self) {
-        let rotated = self.base.rotate270();
-        self.base = rotated;
-        for i in 0..self.layers.len() {
-            let rotated = self.layers[i].layer.rotate270();
-            self.layers[i].layer = rotated;
-        }
-        let tmp = self.size.0;
-        self.size.0 = self.size.1;
-        self.size.1 = tmp;
+        let rotated = self.layers[0].rotate270();
+        self.layers.pop_front();
+        self.layers.push_front(rotated);
     }
     ///Creates an additional layer containing a filled ellipse with given center, major semiaxis, minor semiaxis and color
     pub fn draw_filled_ellipse(&mut self, center: (i32, i32), width_radius: i32, height_radius: i32, color: &Color) {
-        let mut layer = RgbaImage::new(self.size.0, self.size.1);
+        let mut layer = self.layers[0].clone();
         drawing::draw_filled_ellipse_mut(&mut layer, center, width_radius, height_radius, color.color);
-        let layer = Layer::new(image::DynamicImage::ImageRgba8(layer),LayerType::Shape);
         self.layers.push_front(layer);
     }
     ///Creates an additional layer containing an empty ellipse with given center, major semiaxis, minor semiaxis and color
     pub fn draw_empty_ellipse(&mut self, center: (i32, i32), width_radius: i32, height_radius: i32, color: &Color) {
-        let mut layer = RgbaImage::new(self.size.0, self.size.1);
+        let mut layer = self.layers[0].clone();
         drawing::draw_hollow_ellipse_mut(&mut layer, center, width_radius, height_radius, color.color);
-        let layer = Layer::new(image::DynamicImage::ImageRgba8(layer),LayerType::Shape);
         self.layers.push_front(layer);
     }
     ///Creates an additional layer containing a filled rectangle given the upper-left corner, its dimensions and
     ///its color
     pub fn draw_filled_rectangle(&mut self, corner: (i32, i32), dimensions: (u32, u32), color: &Color) {
-        let mut layer = RgbaImage::new(self.size.0, self.size.1);
+        let mut layer = self.layers[0].clone();
         let rect = imageproc::rect::Rect::at(corner.0, corner.1).of_size(dimensions.0, dimensions.1);
         drawing::draw_filled_rect_mut(&mut layer, rect, color.color);
-        let layer = Layer::new(image::DynamicImage::ImageRgba8(layer),LayerType::Shape);
         self.layers.push_front(layer);
     }
     ///Creates an additional layer containing an empty rectangle given the upper-left corner, its dimensions and
     ///its color
     pub fn draw_empty_rectangle(&mut self, corner: (i32, i32), dimensions: (u32, u32), color: &Color) {
-        let mut layer = RgbaImage::new(self.size.0, self.size.1);
+        let mut layer = self.layers[0].clone();
         let rect = imageproc::rect::Rect::at(corner.0, corner.1).of_size(dimensions.0, dimensions.1);
         drawing::draw_hollow_rect_mut(&mut layer, rect, color.color);
-        let layer = Layer::new(image::DynamicImage::ImageRgba8(layer),LayerType::Shape);
         self.layers.push_front(layer);
     }
     ///Draws a line given the initial and final point and the color of the line
     pub fn draw_line(&mut self, start: (i32, i32), end: (i32, i32), color: &Color) {
-        let mut layer = RgbaImage::new(self.size.0, self.size.1);
+        let mut layer = self.layers[0].clone();
         let start = (start.0 as f32, start.1 as f32);
         let end = (end.0 as f32, end.1 as f32);
         drawing::draw_line_segment_mut(&mut layer, start, end, color.color);
-        let layer = Layer::new(image::DynamicImage::ImageRgba8(layer),LayerType::Shape);
         self.layers.push_front(layer);
     }
     ///Draws a polygon given the color and the structure Polygon describing it
     pub fn draw_polygon(&mut self, polygon: Polygon, color: &Color) {
-        let mut layer = RgbaImage::new(self.size.0, self.size.1);
+        let mut layer = self.layers[0].clone();
         drawing::draw_polygon_mut(&mut layer, &polygon.vertices, color.color);
-        let layer = Layer::new(image::DynamicImage::ImageRgba8(layer),LayerType::Shape);
         self.layers.push_front(layer);
     }
     ///Puts a text in the image given the text to write, its color, the position of the upper-left corner,
     ///the font and the font size 
     pub fn put_text<'a>(&mut self, start: (i32, i32), color: &Color, text: &str, font_size: f32, font: &'a rusttype::Font<'a>) {
-        let mut layer = RgbaImage::new(self.size.0, self.size.1);
+        let mut layer = self.layers[0].clone();
         drawing::draw_text_mut(&mut layer, color.color, start.0, start.1, rusttype::Scale::uniform(font_size), font, text);
-        let layer = Layer::new(image::DynamicImage::ImageRgba8(layer),LayerType::Text);
         self.layers.push_front(layer);
     }
     ///Initializes a Layer for free-hand drawing. Return an empty layer on which
     ///it is possible to draw
     pub fn free_hand_draw_init(&self) -> Layer{
-        let layer = RgbaImage::new(self.size.0, self.size.1);
-        let layer = Layer::new(image::DynamicImage::ImageRgba8(layer),LayerType::FreeHandDrawing);
+        let layer = self.layers[0].clone();
+        let layer = Layer::new(layer,LayerType::FreeHandDrawing);
         layer
     }
     ///Finalizes the free-hand drawing layer and puts it with the others. Takes as parameter the previously
     ///defines Layer used for drawing
-    pub fn free_hand_draw_set(&mut self, layer: Layer) {
-        self.layers.push_front(layer);
+    pub fn free_hand_draw_set(&mut self, mut layer: Layer, last: (i32, i32), size: i32, color: &Color ) {
+        imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, last, size/2, color.color);
+        self.layers.push_front(layer.layer);
     }
     ///Draws a point on a previously deifned Layer (returned by free_hand_draw_init) given the point position
     ///and its color. Takes a mutable reference to such Layer
-    pub fn draw_point(layer: &mut Layer, x: i32, y: i32, color: &Color, size: i32) {
-        drawing::draw_filled_circle_mut(&mut layer.layer, (x,y), size, color.color);
+    pub fn draw_point(layer: &mut Layer, prev: Option<((i32, i32), (i32, i32), (i32, i32))>, current: (i32, i32), size: i32, color: &Color) -> ((i32, i32), (i32, i32), (i32, i32)) {
+        match prev {
+            Some((border_l, border_r, center)) => {
+
+                let x0 = center.0 as f32;
+                let y0 = center.1 as f32;
+                let x1 = current.0 as f32;
+                let y1 = current.1 as f32;
+
+                let m = (y1-y0)/(x1-x0);
+
+                if  m.is_nan() || m.is_infinite() || f32::abs(m)>= 5.0 {
+                    let p1 = Point::new(border_l.0, border_l.1);
+                    let p2 = Point::new(current.0-size/2,current.1);
+                    let p3 = Point::new(current.0+size/2,current.1);
+                    let p4 = Point::new(border_r.0,border_r.1);
+
+                    let points = Vec::from(
+                        [
+                            p1,
+                            p2,
+                            p3,
+                            p4
+                        ]
+                    );
+    
+                    let poly = Polygon::from(points);
+                    imageproc::drawing::draw_polygon_mut(&mut layer.layer, &poly.vertices, color.color);
+
+                    return ((current.0-size/2,current.1),(current.0+size/2,current.1),current);
+                    
+                } else if f32::abs(m)<=0.05{
+                    let p1 = Point::new(border_l.0, border_l.1);
+                    let p2 = Point::new(current.0,current.1-size/2);
+                    let p3 = Point::new(current.0,current.1+size/2);
+                    let p4 = Point::new(border_r.0,border_r.1);
+
+                    let points = Vec::from(
+                        [
+                            p1,
+                            p2,
+                            p3,
+                            p4
+                        ]
+                    );
+    
+                    let poly = Polygon::from(points);
+                    imageproc::drawing::draw_polygon_mut(&mut layer.layer, &poly.vertices, color.color);
+
+                    return ((current.0,current.1-size/2),(current.0,current.1+size/2),current);
+                } else {
+
+                    let xl1 = border_l.0;
+                    let xr1 = border_r.0;
+                    let yl1 = border_l.1;
+                    let yr1 = border_r.1;
+
+                    let distance = (current.0 - center.0, current.1-center.1);
+
+                    let xl2 = xl1 + distance.0;
+                    let xr2 = xr1 + distance.0;
+                    let yl2 = yl1 + distance.1;
+                    let yr2 = yr1 + distance.1;
+
+                    let p1: Point<i32>;
+                    let p2: Point<i32>;
+                    let p3: Point<i32>;
+                    let p4: Point<i32>;
+
+                    p1 = Point::new(xl1 as i32,yl1 as i32);
+                    p2 = Point::new(xl2 as i32,yl2 as i32);
+                    p3 = Point::new(xr2 as i32,yr2 as i32);
+                    p4 = Point::new(xr1 as i32,yr1 as i32);
+
+                    let points = Vec::from(
+                        [
+                            p1,
+                            p2,
+                            p3,
+                            p4
+                        ]
+                    );
+    
+                    let poly = Polygon::from(points);
+                    imageproc::drawing::draw_polygon_mut(&mut layer.layer, &poly.vertices, color.color);
+
+                    return ((xl2, yl2),(xr2, yr2),current);
+                }
+            },
+            None => {
+                let border_l = (current.0-size/2, current.1);
+                let border_r = (current.0+size/2, current.1);
+
+                imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, current, size/2, color.color);
+
+                return (border_l, border_r, current);
+            }
+        }
     }
+    pub fn rubber_init(&self, last_crop_data: Option<((u32, u32),(u32, u32))>) -> (Layer, Layer) {
+        let layer = self.layers[0].clone();
+        let layer = Layer::new(layer,LayerType::FreeHandDrawing);
+        let mut base = self.base.clone();
+        let base = match last_crop_data {
+            Some(last_crop_data) => {
+                base.crop(last_crop_data.0.0, last_crop_data.0.1, last_crop_data.1.0, last_crop_data.1.1)
+            },
+            None => {
+                base
+            }
+        };
+        let base = Layer::new(base,LayerType::Shape);
+        (base, layer)
+    }
+    pub fn rubber_set(&mut self, mut layer: Layer, base: &Layer, last: (i32, i32), size: i32) {
+        let color = Color::new(0, 0, 0, 0.0);
+        imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, last, size/2, color.color);
+        let layer = layer.show_rubber(base);
+        self.layers.push_front(layer);
+    }
+    pub fn rubber(layer: &mut Layer, prev: Option<((i32, i32),(i32, i32),(i32, i32))>, current: (i32, i32), size: i32) -> ((i32, i32), (i32, i32), (i32, i32)) {
+        let color = Color::new(0, 0, 0, 0.0);
+        Image::draw_point(layer, prev, current, size, &color)
+    }
+
+    pub fn highlight_init(&self) -> (Layer, Layer) {
+        let base = self.layers[0].clone();
+        let base = Layer::new(base,LayerType::FreeHandDrawing);
+        let width = base.layer.width();
+        let height = base.layer.height();
+        let canva = RgbaImage::new(width, height);
+        let canva = Layer::new(DynamicImage::ImageRgba8(canva), LayerType::Shape);
+        (base, canva)
+    }
+    pub fn highlight_set(&mut self, mut layer: Layer, base: &Layer, last: (i32, i32), size: i32, color: &Color) {
+        imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, last, size/2, color.color);
+        let layer = layer.show_higlight(base);
+        self.layers.push_front(layer);
+    }
+    pub fn highlight(layer: &mut Layer, prev: Option<((i32, i32),(i32, i32),(i32, i32))>, current: (i32, i32), size: i32, color: &Color) -> ((i32, i32), (i32, i32), (i32, i32)) {
+        Image::draw_point(layer, prev, current, size, color)
+    }
+
     ///Remove the most recent created layer
     pub fn undo(&mut self) {
         self.layers.pop_front();
@@ -229,46 +328,48 @@ impl Image {
             }
         };
         let _file = File::create(&path)?;
-        let mut image  = self.base.clone();
-        for layer in &self.layers {
-            image::imageops::overlay(&mut image, &layer.layer, 0, 0);
-        }
+        let image  = self.layers[0].clone();
         image.save(path)?;
         
         Ok(())
     }
     ///Saves the image given the extension and the name one want to give it. The name includes also 
     ///the path.
-    pub fn save_as(&self, name: &str, extension: Extensions) -> Result<(),ImageManipulationError> {
-
-        let path = match extension {
-            Extensions::JPG => {
-                format!("{}.jpg",name)
-            }
-            Extensions::PNG => {
-                format!("{}.png",name)
-            }
-            Extensions::GIF => {
-                format!("{}.gif",name)
-            }
-        };
-        let _file = File::create(&path)?;
-        let mut image  = self.base.clone();
-        for layer in &self.layers {
-            image::imageops::overlay(&mut image, &layer.layer, 0, 0);
+    pub fn save_as(&self, location: &str, name: &str, extension: Extensions) -> Result<(), ImageManipulationError> {    let mut n;
+        if name.len() == 0{
+            n = match extension {
+                Extensions::JPG => {
+                    format!("unnamed_{}.jpg",UNNAMED_COUNTER.fetch_add(1, Ordering::SeqCst))
+                }
+                Extensions::PNG => {
+                    format!("unnamed_{}.png",UNNAMED_COUNTER.fetch_add(1, Ordering::SeqCst))
+                }
+                Extensions::GIF => {
+                    format!("unnamed_{}.gif",UNNAMED_COUNTER.fetch_add(1, Ordering::SeqCst))
+                }
+            };
+        }else{
+            n = match extension {
+                Extensions::JPG => {
+                    format!("{}.jpg",name)
+                }
+                Extensions::PNG => {
+                    format!("{}.png",name)
+                }
+                Extensions::GIF => {
+                    format!("{}.gif",name)
+                }
+            };
         }
-        image.save(path)?;
-        
+        let mut path = String::from(location);
+        path.push_str(n.as_str());    let _file = File::create(&path)?;
+        let image  = self.layers[0].clone();    image.save(path)?;
         Ok(())
     }
     ///Returns the image with all the layers stacked
     ///The original image is cloned, and all the layers are merged
     pub fn show(&self) -> DynamicImage {
-        let mut image  = self.base.clone();
-        for layer in &self.layers {
-            image::imageops::overlay(&mut image, &layer.layer, 0, 0);
-        }
-        image
+        self.layers[0].clone()
     }
     ///Copies the image to the clipboard
     ///An error is returned if the operation is not successfull
@@ -311,6 +412,7 @@ pub fn load_image_from_path(path: &std::path::Path) -> Result<egui::ColorImage, 
 }
 
 pub fn load_image_from_memory(image_data: DynamicImage) -> Result<egui::ColorImage, image::ImageError> {
+    //let image = image::load_from_memory(&image_data)?;
     let size = [image_data.width() as _, image_data.height() as _];
     let image_buffer = image_data.to_rgba8();
     let pixels = image_buffer.as_flat_samples();
