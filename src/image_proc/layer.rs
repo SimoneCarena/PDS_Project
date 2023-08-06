@@ -1,10 +1,12 @@
 use image::DynamicImage;
 
+#[derive(Clone)]
 pub struct Layer {
     pub layer: DynamicImage,
     pub layer_type: LayerType
 }
 
+#[derive(Clone, Copy)]
 pub enum LayerType {
     Text,
     Shape,

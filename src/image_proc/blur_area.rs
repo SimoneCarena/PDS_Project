@@ -11,10 +11,10 @@ pub struct BlurArea{
 impl BlurArea {
     pub fn new(image: DynamicImage, blur: DynamicImage, crop_position: (u32, u32), crop_size: (u32, u32)) -> Self {
         Self {
-            image: image,
-            blur: blur,
-            crop_position: crop_position,
-            crop_size: crop_size
+            image,
+            blur,
+            crop_position,
+            crop_size
         }
     }
     pub fn get_crop_data(&self) -> ((u32,u32),(u32,u32)) {

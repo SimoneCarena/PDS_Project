@@ -23,6 +23,7 @@ use eframe::egui;
 static UNNAMED_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 ///Structure containing the base screenshot, its size and the additional layers of editing applied to it
+#[derive(Clone)]
 pub struct Image {
     base: DynamicImage,
     layers: VecDeque<Layer>,

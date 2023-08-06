@@ -32,7 +32,6 @@ fn main() -> Result<(), eframe::Error> {
 
     /*manager.register(hotkey1).unwrap();
     manager.register(hotkey4).unwrap();*/
-
     //return Ok(());
 
     let native_options = eframe::NativeOptions{
@@ -45,7 +44,7 @@ fn main() -> Result<(), eframe::Error> {
 
     eframe::run_native(
         "Screenshot Tool",
-        native_options.clone(),
+        native_options,
         Box::new(|cc| Box::<MyApp>::new(MyApp::new(cc)))
     ).expect("TODO: panic message");
 
