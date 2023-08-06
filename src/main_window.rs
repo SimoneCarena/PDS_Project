@@ -108,6 +108,8 @@ pub struct MyApp {
     highlight: bool,
     rubber_layer: Option<Layer>,
     last_crop_data: Option<((u32, u32), (u32, u32))>,
+    shape: bool,
+    second_shape_pressed: bool
 }
 
 impl MyApp {
@@ -149,7 +151,9 @@ impl MyApp {
             rubber: false,
             highlight: false,
             rubber_layer: None,
-            last_crop_data: None
+            last_crop_data: None,
+            shape: false,
+            second_shape_pressed: false
         };
 
         match File::open("settings/settings"){
@@ -813,12 +817,13 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
             if app.rubber {
                 if ui.button("✏ Draw").on_hover_text("Free-hand drawing").clicked(){
                     app.highlight = false;
+                    app.shape = false;
                     app.rubber = !app.rubber;
                     app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
                 }
             }else{
                 if ui.button("🗑 Erase").on_hover_text("Erase annotations").clicked(){
-                app.highlight = false;
+                app.highlight = false; app.shape = false;
                 app.rubber = !app.rubber;
                 if app.rubber{
                         let (rl, dl) = app.image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
@@ -841,9 +846,16 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
 
             if ui.button("📌 Highlight").on_hover_text("Activate highlighter").clicked(){
                 app.highlight = true;
+                app.shape = false;
                 let (rl, dl) = app.image_to_save.as_ref().unwrap().highlight_init();
                 app.rubber_layer = Some(rl);
                 app.draw_layer = Some(dl);
+            }
+
+            if ui.button("Rect").clicked(){
+                app.shape = true;
+                app.highlight = false;
+                app.second_shape_pressed = false;
             }
         });
 
@@ -858,7 +870,7 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
             app.cur_mouse_pos = Some(scaled_pos);
 
             let cur = app.cur_mouse_pos.unwrap().clone();
-            if !app.highlight {
+            if !app.highlight && !app.shape{
                 if !app.rubber {
                     app.prev_edge = Some(Image::draw_point(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), 10, &image_proc::colors::Color::new(255, 0, 0, 1.0)));
                     di = app.draw_layer.as_ref().unwrap().show();
@@ -866,10 +878,23 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                     app.prev_edge = Some(Image::rubber(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), 10));
                     di = app.draw_layer.as_ref().unwrap().show_rubber(app.rubber_layer.as_ref().unwrap());
                 }
-            } else {
+            } else if !app.shape{
                 app.prev_edge = Some(Image::highlight(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), 10, &image_proc::colors::Color::new(255, 255, 0, 0.3)));
                 di = app.draw_layer.as_ref().unwrap().show_higlight(app.rubber_layer.as_ref().unwrap());
+            } else {
+                if !app.second_shape_pressed {
+                    let (rl, dl) = app.image_to_save.as_ref().unwrap().shape_init(app.cur_mouse_pos.clone().unwrap(), (100, 100));
+                    app.rubber_layer = Some(rl);
+                    app.draw_layer = Some(dl);
+                    di = app.draw_layer.as_ref().unwrap().show_shape(app.rubber_layer.as_ref().unwrap()); ////////
+                    app.second_shape_pressed = true;
+                } else {
+                    Image::draw_empty_rectangle(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (cur.0 as i32, cur.1 as i32), (100, 100), &image_proc::colors::Color::new(255, 0, 0, 1.0));
+                    di = app.draw_layer.as_ref().unwrap().show_shape(app.rubber_layer.as_ref().unwrap());
+                    app.second_shape_pressed = false;
+                }
             }
+
 
             app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
         }
@@ -877,7 +902,7 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
         if ctx.input(|i| i.pointer.any_released()) && app.any_pressed {
             app.any_pressed = false;
 
-            if !app.highlight {
+            if !app.highlight && !app.shape{
                 if !app.rubber {
                     app.image_to_save.as_mut().unwrap().free_hand_draw_set(app.draw_layer.take().unwrap(), app.prev_edge.unwrap().clone().2, 5, &image_proc::colors::Color::new(255, 0, 0, 1.0));
                     app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
@@ -887,11 +912,14 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                     app.rubber_layer = Some(rl);
                     app.draw_layer = Some(dl);
                 }
-            } else {
+            } else if !app.shape{
                 app.image_to_save.as_mut().unwrap().highlight_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, 5, &image_proc::colors::Color::new(255, 255, 0, 0.3));
                 let (rl, dl) = app.image_to_save.as_ref().unwrap().highlight_init();
                 app.rubber_layer = Some(rl);
                 app.draw_layer = Some(dl);
+            }else{
+
+
             }
             app.prev_edge = None;
         }

@@ -25,7 +25,6 @@ pub fn get_new_area(start: (u32, u32), end: (u32, u32), old_pos: (u32, u32), old
     let mut new_pos: (i32,i32);
     let mut new_size: (i32,i32);
     let limits = (image_size.0 as i32, image_size.1 as i32);
-    //println!("{:?}",limits);
 
     match corner {
         Corner::DownLeft => {

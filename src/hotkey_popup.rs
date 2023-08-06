@@ -86,6 +86,35 @@ impl Operation{
     }
 
     pub fn get_immut_hotkey(&self) -> HotKey {self.id.clone()}
+
+    pub fn parse(str: String) -> Result<Operation, String>{
+
+        if !str.contains("Key"){
+            return Err("Non valid string".to_string());
+        }
+
+        let mut alt=false;
+        let mut shift=false;
+        let mut ctrl=false;
+
+        if str.contains("alt"){
+            alt = true;
+        }
+        if str.contains("shift"){
+            shift = true;
+        }
+        if str.contains("ctrl"){
+            ctrl = true;
+        }
+
+        let hk: HotKey = str.parse().unwrap();
+
+        let key = str.split("+").last().unwrap().to_string();
+        let code = string_to_code(&key);
+
+        let op = Operation::new(hk, "".to_string(), alt, shift, ctrl, code);
+        Ok(op)
+    }
 }
 
 impl PartialEq<Self> for Operation {
@@ -160,4 +189,38 @@ impl Default for HotKeyPopUp {
             ]
         }
     }
+}
+
+pub fn string_to_code(s: &str) -> Code{
+    let mut ris = Code::KeyA;
+    match s{
+        "KeyQ" => ris = Code::KeyQ,
+        "KeyW" => ris = Code::KeyW,
+        "KeyE" => ris = Code::KeyE,
+        "KeyR" => ris = Code::KeyR,
+        "KeyT" => ris = Code::KeyT,
+        "KeyY" => ris = Code::KeyY,
+        "KeyU" => ris = Code::KeyU,
+        "KeyI" => ris = Code::KeyI,
+        "KeyO" => ris = Code::KeyO,
+        "KeyP" => ris = Code::KeyP,
+        "KeyA" => ris = Code::KeyA,
+        "KeyS" => ris = Code::KeyS,
+        "KeyD" => ris = Code::KeyD,
+        "KeyF" => ris = Code::KeyF,
+        "KeyG" => ris = Code::KeyG,
+        "KeyH" => ris = Code::KeyH,
+        "KeyJ" => ris = Code::KeyJ,
+        "KeyK" => ris = Code::KeyK,
+        "KeyL" => ris = Code::KeyL,
+        "KeyZ" => ris = Code::KeyZ,
+        "KeyX" => ris = Code::KeyX,
+        "KeyC" => ris = Code::KeyC,
+        "KeyV" => ris = Code::KeyV,
+        "KeyB" => ris = Code::KeyB,
+        "KeyN" => ris = Code::KeyN,
+        "KeyM" => ris = Code::KeyM,
+        _ => {}
+    }
+    ris
 }
