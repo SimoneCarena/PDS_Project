@@ -1,5 +1,7 @@
 use std::cmp::min;
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
+use std::fs::File;
+use std::io::{BufRead, BufReader, Read};
 //use std::arch::x86_64::_mm_clflush;
 use std::path::Path;
 use std::thread::sleep;
@@ -82,18 +84,21 @@ pub struct MyApp {
     anchor_corner: Option<((f32, f32), f32)>,
     draw_layer: Option<Layer>,
     prev_edge: Option<((i32, i32), (i32, i32), (i32, i32))>,
-    fonts: Option<HashMap<String, Font<'static>>>,
+    fonts: Option<BTreeMap<String, Font<'static>>>,
     sel_font: Option<String>,
     sel_font_size: usize,
     sel_color: Color,
     image_text: String,
     is_sel_color: bool,
-    dropdown_on: bool
+    dropdown_on: bool,
+    rubber: bool,
+    rubber_layer: Option<Layer>,
+    last_crop_data: Option<((u32, u32), (u32, u32))>
 }
 
 impl MyApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        let ret = MyApp{
+        let mut ret = MyApp{
             prev: Status::default(), status: Status::default(),
             hk: HotKeyPopUp::default(), hk_copy: HotKeyPopUp::default(),
             manager_hk: GlobalHotKeyManager::new().unwrap(),
@@ -108,8 +113,8 @@ impl MyApp {
             save_name: String::new(),
             clipboard: arboard::Clipboard::new().unwrap(),
             pointer: egui::PointerState::default(),
-            hk_num: 4usize,
-            forbidden_hk: vec![false; 4usize],
+            hk_num: 7usize,
+            forbidden_hk: vec![false; 7usize],
             any_pressed: false,
             sel_screen: 0usize,
             window_image_ratio: 0.2,  //default
@@ -126,13 +131,49 @@ impl MyApp {
             sel_color: Color::new(0, 0, 0, 1.0),
             image_text: String::from("Insert text here"),
             is_sel_color: false,
-            dropdown_on: false
+            dropdown_on: false,
+            rubber: false,
+            rubber_layer: None,
+            last_crop_data: None
         };
 
-        ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyA)).unwrap();
+        match File::open("settings/settings"){
+            Ok(f) => {
+                let br = BufReader::new(f);
+                for (i, l) in br.lines().enumerate(){
+                    match i {
+                        0..=6 => {
+                            ret.manager_hk.register(l.unwrap().parse().unwrap()).unwrap();
+                        },
+                        _ => {}
+                    }
+                }
+            }
+            Err(_) => {} // non si fa nulla
+        }
+
+        /*ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyA)).unwrap();
         ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyB)).unwrap();
         ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyC)).unwrap();
         ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyD)).unwrap();
+        ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyE)).unwrap();
+        ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyF)).unwrap();
+        ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyG)).unwrap();*/
+
+        ret.fonts = Some(match load_fonts(){
+            Ok(x) => {x}
+            Err(_) => {
+                match load_fonts_fallback(){
+                    Ok(y) => {
+                        y
+                    }
+                    Err(_) => {
+                        panic!(); //todo()!
+                    }
+                }
+            }
+        });
+
         ret
     }
 }
@@ -157,11 +198,6 @@ impl eframe::App for MyApp {
                             self.instant_flag = true;
                             self.status = Hidden;
                         },
-                        "Save capture" => {
-                            if self.image_to_save.is_some() {
-                                self.image_to_save.as_ref().unwrap().save(self.extension).unwrap();
-                            }
-                        },
                         "Delay capture" => {
                             frame.set_visible(false);
                             self.disabled_time = ctx.input(|i| i.time);
@@ -169,8 +205,69 @@ impl eframe::App for MyApp {
                             self.instant_flag = false;
                             self.status = Hidden;
                         },
+                        "Crop capture" => {
+                            if self.image_to_save.is_some() {
+                                let w = self.image_to_save.as_ref().unwrap().width();
+                                let h = self.image_to_save.as_ref().unwrap().height();
+                                let blur = self.image_to_save.as_ref().unwrap().blur_area(0, 0, w, h);
+                                self.anchor_corner = Some(((0.0, 0.0), self.window_image_ratio));
+                                self.prev_mouse_pos = None;
+                                self.cur_mouse_pos = None;
+                                self.bl_ar = Some(blur);
+                                self.prev = self.status;
+                                self.backup_image = self.image.clone();
+                                self.backup_image_to_save = self.image_to_save.clone();
+                                self.status = Crop;
+                            }
+                        },
+                        "Draw capture" => {
+                            if self.image_to_save.is_some() {
+                                self.draw_layer = Some(self.image_to_save.as_ref().unwrap().free_hand_draw_init());
+                                self.backup_image = self.image.clone();
+                                self.backup_image_to_save = self.image_to_save.clone();
+                                self.status = Draw;
+                            }
+                        },
+                        "Text capture" => {
+                            if self.image_to_save.is_some() {
+                                self.backup_image = self.image.clone();
+                                self.backup_image_to_save = self.image_to_save.clone();
+                                self.prev = self.status;
+                                self.status = Text;
+                            }
+                        },
                         "Copy to clipboard" => {
-                            self.image_to_save.as_ref().unwrap().copy_to_clipboard(&mut self.clipboard).unwrap();
+                            if self.image_to_save.is_some() {
+                                self.image_to_save.as_ref().unwrap().copy_to_clipboard(&mut self.clipboard).unwrap();
+                            }
+                        },
+                        "Save capture" => {
+                            if self.image_to_save.is_some() {
+                                let mut location = String::from(self.save_path.as_str());
+                                if cfg!(target_os = "windows") {
+                                    if !self.save_path.ends_with("\\") {
+                                        location.push_str("\\");
+                                    }
+                                    if self.save_name.len() == 0 {
+                                        self.image_to_save.as_ref().unwrap().save_as(location.as_str(), "", self.extension).unwrap();
+                                    } else {
+                                        self.image_to_save.as_ref().unwrap().save_as(location.as_str(), self.save_name.as_str(), self.extension).unwrap();
+                                    }
+                                    self.save_name = String::new();
+                                } else if cfg!(target_os = "macos") || cfg!(target_os = "linux") {
+                                    if !self.save_path.ends_with("/") {
+                                        location.push_str("/");
+                                    }
+                                    if self.save_name.len() == 0 {
+                                        self.image_to_save.as_ref().unwrap().save_as(location.as_str(), "", self.extension).unwrap();
+                                    } else {
+                                        self.image_to_save.as_ref().unwrap().save_as(location.as_str(), self.save_name.as_str(), self.extension).unwrap();
+                                    }
+                                    self.save_name = String::new();
+                                } else {
+                                    panic!(); // da gestire
+                                }
+                            }
                         },
                         _ => {}
                     }
@@ -279,6 +376,8 @@ fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame)
                 app.cur_mouse_pos = None;
                 app.bl_ar = Some(blur);
                 app.prev = app.status;
+                app.backup_image = app.image.clone();
+                app.backup_image_to_save = app.image_to_save.clone();
                 app.status = Crop;
             }
 
@@ -286,41 +385,45 @@ fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame)
                 app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
                 app.backup_image = app.image.clone();
                 app.backup_image_to_save = app.image_to_save.clone();
+                app.rubber = false;
                 app.status = Draw;
             }
 
-            if ui.button("📋 Copy").on_hover_text("Copy the capture on clipboard").clicked(){
-                app.image_to_save.as_ref().unwrap().copy_to_clipboard(&mut app.clipboard).unwrap();
-            }
-
             if ui.button("📝 Text").on_hover_text("Write some text over the capture").clicked(){
-                app.fonts = Some(match load_fonts(){
-                    Ok(x) => {x}
-                    Err(_) => {
-                        match load_fonts_fallback(){
-                            Ok(y) => {
-                                y
-                            }
-                            Err(_) => {
-                                panic!(); //todo()!
-                            }
-                        }
-                    }
-                });
                 app.backup_image = app.image.clone();
                 app.backup_image_to_save = app.image_to_save.clone();
                 app.prev = app.status;
                 app.status = Text;
             }
 
+            if ui.button("📋 Copy").on_hover_text("Copy the capture on clipboard").clicked(){
+                app.image_to_save.as_ref().unwrap().copy_to_clipboard(&mut app.clipboard).unwrap();
+            }
 
             if ui.button("💾 Save").on_hover_text("Save the capture").clicked(){
-                if app.save_name.len()>0{
-                    app.image_to_save.as_ref().unwrap().save_as(&app.save_name, app.extension).unwrap();
+                let mut location = String::from(app.save_path.as_str());
+                if cfg!(target_os = "windows"){
+                    if !app.save_path.ends_with("\\"){
+                        location.push_str("\\");
+                    }
+                    if app.save_name.len() == 0{
+                        app.image_to_save.as_ref().unwrap().save_as(location.as_str(), "", app.extension).unwrap();
+                    }else {
+                        app.image_to_save.as_ref().unwrap().save_as(location.as_str(), app.save_name.as_str(), app.extension).unwrap();
+                    }
                     app.save_name = String::new();
-                }
-                else{
-                    app.image_to_save.as_ref().unwrap().save(app.extension).unwrap();
+                }else if cfg!(target_os = "macos") || cfg!(target_os = "linux"){
+                    if !app.save_path.ends_with("/"){
+                        location.push_str("/");
+                    }
+                    if app.save_name.len() == 0{
+                        app.image_to_save.as_ref().unwrap().save_as(location.as_str(), "", app.extension).unwrap();
+                    }else {
+                        app.image_to_save.as_ref().unwrap().save_as(location.as_str(), app.save_name.as_str(), app.extension).unwrap();
+                    }
+                    app.save_name = String::new();
+                }else{
+                    panic!(); // da gestire
                 }
             }
 
@@ -359,8 +462,12 @@ fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame)
         });
 
         ui.horizontal(|ui| {
+            ui.style_mut().visuals.override_text_color = Some(egui::Color32::WHITE);
             ui.label("File Name: ");
-            ui.add(egui::TextEdit::singleline(&mut app.save_name));
+
+            ui.style_mut().visuals.widgets.hovered.bg_stroke.color = egui::Color32::WHITE;
+            ui.add(egui::TextEdit::singleline(&mut app.save_name)).highlight();
+
         });
 
     });
@@ -519,16 +626,27 @@ fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                                     app.image.as_ref().unwrap().size_vec2() * app.window_image_ratio));
         });
 
-        if ui.add(egui::Button::new("OK")).clicked() {
-            app.prev = app.status;
-            app.status = Image;
-            app.image_to_save.as_mut().unwrap().crop(app.bl_ar.take().unwrap());
-            app.image = Some(ctx.load_texture(
-                "my-image",
-                get_image_from_memory(app.image_to_save.as_ref().unwrap().show(), 0, 0, 1, 1),
-                Default::default()
-            ));
-        }
+        ui.horizontal(|ui|{
+            ui.style_mut().visuals.override_text_color = Some(egui::Color32::WHITE);
+            if ui.add(egui::Button::new("OK")).clicked() {
+                app.prev = app.status;
+                app.status = Image;
+                app.image_to_save.as_mut().unwrap().crop(app.bl_ar.take().unwrap());
+                app.image = Some(ctx.load_texture(
+                    "my-image",
+                    get_image_from_memory(app.image_to_save.as_ref().unwrap().show(), 0, 0, 1, 1),
+                    Default::default()
+                ));
+            }
+
+            if ui.add(egui::Button::new("Back")).clicked(){
+                app.prev = app.status;
+                app.status = Image;
+                app.bl_ar = None;
+                app.image_to_save = app.backup_image_to_save.clone();
+                app.image = app.backup_image.clone()
+            }
+        });
 
 
     });
@@ -537,10 +655,11 @@ fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
 
 fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
     egui::CentralPanel::default().show(ctx, |ui| {
-        egui::ScrollArea::vertical()
+        /*egui::ScrollArea::vertical()
             .scroll_bar_visibility(ScrollBarVisibility::AlwaysVisible)
             .auto_shrink([true; 2])
-            .show(ui, |ui|{
+            .show(ui, |ui|{*/
+                ui.style_mut().visuals.override_text_color = Some(egui::Color32::WHITE);
                 app.dropdown_on = false;
 
                 let window_size = Vec2::new(ctx.screen_rect().width() - 5.0, ctx.screen_rect().height() - 60.0);
@@ -567,12 +686,13 @@ fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                         .selected_text(format!("{}", app.sel_font_size))
                         .show_ui(ui, |ui| {
                             app.dropdown_on = true;
-                            for i in (10..26).step_by(2) {
+                            for i in (10..30).step_by(2) {
                                 ui.selectable_value(&mut app.sel_font_size, i, format!("{i}"));
                             }
                         });
 
-                    ui.add(egui::TextEdit::singleline(&mut app.image_text));
+                    ui.style_mut().visuals.widgets.hovered.bg_stroke.color = egui::Color32::WHITE;
+                    ui.add(egui::TextEdit::singleline(&mut app.image_text)).highlight();
 
                 });
 
@@ -582,14 +702,13 @@ fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                     }
 
                     if app.is_sel_color {
-                        let mut color_vec = convert_u8_f32([app.sel_color.color.0[0], app.sel_color.color.0[1], app.sel_color.color.0[2]]);
+                        app.dropdown_on = true;
+                        let mut color_vec = [app.sel_color.color.0[0], app.sel_color.color.0[1], app.sel_color.color.0[2]];
+                        egui::widgets::color_picker::color_edit_button_srgb(ui, &mut color_vec);
 
-                        egui::widgets::color_picker::color_edit_button_rgb(ui, &mut color_vec);
-
-                        let v = convert_f32_u8(color_vec);
-                        app.sel_color.color.0[0] = v[0];
-                        app.sel_color.color.0[1] = v[1];
-                        app.sel_color.color.0[2] = v[2];
+                        app.sel_color.color.0[0] = color_vec[0];
+                        app.sel_color.color.0[1] = color_vec[1];
+                        app.sel_color.color.0[2] = color_vec[2];
 
                         if ui.add(egui::Button::new("OK")).clicked() {
                             app.is_sel_color = false;
@@ -597,25 +716,24 @@ fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                     }
                 });
 
-
                 match ctx.input(|i| i.pointer.hover_pos()) {
                     None => {}
                     Some(pos) => {
                         if pos.x - offset > 0.0 && pos.x - offset < image_size.x * app.window_image_ratio
-                            && pos.y > 30.0 && pos.y < (image_size.y * app.window_image_ratio) * 1.07 && !app.any_pressed && !app.dropdown_on {
+                            && pos.y > 51.0 && pos.y < (image_size.y * app.window_image_ratio) * 1.1 && !app.any_pressed && !app.dropdown_on {
                             //println!("Dentro");
                             match ctx.input(|i| i.pointer.any_pressed()) {
                                 true => {
                                     app.any_pressed = true;
                                     //let start = (pos.x as i32, pos.y as i32);
 
-                                    let start = cursor_position(((pos.x-offset) as u32, (pos.y) as u32), app.window_image_ratio);
+                                    let start = cursor_position(((pos.x-offset) as u32, (pos.y-60.0) as u32), app.window_image_ratio);
                                     let start = (start.0 as i32, start.1 as i32);
                                     app.backup_image_to_save.as_mut().unwrap().put_text(
                                         start,
                                         &app.sel_color,
                                         app.image_text.as_str(),
-                                        (app.sel_font_size as f32)*app.window_image_ratio*20.0,
+                                        (app.sel_font_size as f32)*5.0,/**app.window_image_ratio*20.0,*/
                                         app.fonts.as_ref().unwrap().get(app.sel_font.as_ref().unwrap().as_str()).unwrap()
                                     );
                                     app.any_pressed = false;
@@ -660,7 +778,7 @@ fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                         app.backup_image_to_save = app.image_to_save.clone();
                     }
                 });
-            });
+            //});
     });
 }
 
@@ -672,7 +790,12 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
             ui.style_mut().visuals.override_text_color = Some(egui::Color32::WHITE);
             // color picker, thickness
             if ui.button("🗑 Erase").on_hover_text("Erase annotations").clicked() {
-
+                app.rubber = !app.rubber;
+                if app.rubber{
+                    let (rl, dl) = app.image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
+                    app.rubber_layer = Some(rl);
+                    app.draw_layer = Some(dl);
+                }
             }
         });
 
@@ -687,16 +810,29 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
             app.cur_mouse_pos = Some(scaled_pos);
 
             let cur = app.cur_mouse_pos.unwrap().clone();
-            app.prev_edge = Some(Image::draw_point(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), 10, &image_proc::colors::Color::new(255, 0, 0, 1.0)));
+            if !app.rubber {
+                app.prev_edge = Some(Image::draw_point(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), 10, &image_proc::colors::Color::new(255, 255, 0, 1.0)));
+                di = app.draw_layer.as_ref().unwrap().show();
+            }else{
+                app.prev_edge = Some(Image::rubber(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), 10));
+                di = app.draw_layer.as_ref().unwrap().show_rubber(app.rubber_layer.as_ref().unwrap());
+            }
 
-            di = app.draw_layer.as_ref().unwrap().show();
             app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
         }
 
         if ctx.input(|i| i.pointer.any_released()) && app.any_pressed {
             app.any_pressed = false;
-            app.image_to_save.as_mut().unwrap().free_hand_draw_set(app.draw_layer.take().unwrap(), app.prev_edge.unwrap().clone().2, 5, &image_proc::colors::Color::new(255, 0, 0, 1.0));
-            app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
+
+            if !app.rubber {
+                app.image_to_save.as_mut().unwrap().free_hand_draw_set(app.draw_layer.take().unwrap(), app.prev_edge.unwrap().clone().2, 5, &image_proc::colors::Color::new(255, 0, 0, 1.0));
+                app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
+            } else {
+                app.image_to_save.as_mut().unwrap().rubber_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, 5);
+                let (rl, dl) = app.image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
+                app.rubber_layer = Some(rl);
+                app.draw_layer = Some(dl);
+            }
             app.prev_edge = None;
         }
 
@@ -729,7 +865,7 @@ fn settings_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
             .show(ui, |ui|{
                 ui.style_mut().visuals.override_text_color = Some(egui::Color32::WHITE);
                 ui.heading("Settings Editor");
-                let labels = ["New capture", "Save capture", "Delay capture", "Copy to clipboard"];
+                let labels = ["New capture", "Delay capture", "Crop capture", "Draw capture", "Text capture", "Copy to clipboard", "Save capture"];
                 for (i, l) in labels.iter().enumerate(){
                     ui.label(l.to_string());
                     ui.horizontal(|ui| {
@@ -784,7 +920,7 @@ fn settings_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         });
                     }
 
-                    if i==2{
+                    if i==1{
                         egui::ComboBox::from_label(format!("Select Capture Delay!",))
                             .selected_text(format!("{}", app.delay_secs_cp))
                             .show_ui(ui, |ui| {
@@ -801,7 +937,7 @@ fn settings_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         let shift = app.hk_copy.get_shortcuts(i).get_immut_shift().clone();
                         let sel_key = app.hk_copy.get_shortcuts(i).get_immut_selkey().clone();
 
-                        if i==2{
+                        if i==1{
                             app.delay_secs = app.delay_secs_cp;
                         }
 
@@ -825,6 +961,7 @@ fn settings_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                     }
                 }
 
+                ui.heading("Save Extension");
                 egui::ComboBox::from_label(format!("Select the Save EXTENSION!"))
                     .selected_text(format!("{:?}", app.extension_copy))
                     .show_ui(ui, |ui| {
@@ -837,7 +974,11 @@ fn settings_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                     app.extension = app.extension_copy;
                 }
 
-                ui.add(egui::TextEdit::singleline(&mut app.save_path_copy));
+                ui.heading("Save Directory");
+                ui.scope(|ui|{
+                    //ui.style_mut().visuals.widgets.hovered.bg_stroke.color = egui::Color32::WHITE;
+                    ui.add(egui::TextEdit::singleline(&mut app.save_path_copy)).highlight();
+                });
                 let path = Path::new(&app.save_path_copy);
                 if !path.exists() || !path.is_dir(){
                     ui.scope(|ui|{
@@ -877,10 +1018,6 @@ fn take_capture(screen: &Screen) -> Option<Image> {
             return None
         }
     }
-}
-
-fn show_capture(im: Image){
-
 }
 
 fn min_my(a: f32, b: f32) -> f32{

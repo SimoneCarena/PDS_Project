@@ -1,4 +1,4 @@
-use image::DynamicImage;
+use image::{DynamicImage, imageops::overlay};
 
 #[derive(Clone)]
 pub struct Layer {
@@ -20,8 +20,12 @@ impl Layer {
             layer_type: layer_type
         }
     }
-
     pub fn show(&self) -> DynamicImage{
         self.layer.clone()
+    }
+    pub fn show_rubber(&self, base: &Layer) -> DynamicImage {
+        let mut image = base.layer.clone();
+        overlay(&mut image, &self.layer, 0, 0);
+        image
     }
 }

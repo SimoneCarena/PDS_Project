@@ -26,6 +26,7 @@ static UNNAMED_COUNTER: AtomicUsize = AtomicUsize::new(0);
 ///Structure containing the base screenshot, its size and the additional layers of editing applied to it
 #[derive(Debug, Clone)]
 pub struct Image {
+    base: DynamicImage,
     layers: VecDeque<DynamicImage>
 }
 
@@ -35,9 +36,10 @@ impl Image {
     pub fn open(path: &str) -> Result<Self,ImageManipulationError> {
         let image = image::open(path)?;
         let mut layers = VecDeque::new();
-        layers.push_front(image);
+        layers.push_front(image.clone());
         Ok(
             Self {
+                base: image,
                 layers: layers
             }
         )
@@ -163,93 +165,129 @@ impl Image {
     }
     ///Draws a point on a previously deifned Layer (returned by free_hand_draw_init) given the point position
     ///and its color. Takes a mutable reference to such Layer
-    pub fn draw_point(layer: &mut Layer, prev: Option<((i32, i32),(i32, i32),(i32, i32))>, current: (i32, i32), size: i32, color: &Color) -> ((i32, i32), (i32, i32), (i32, i32)) {
-
-        let (x1, y1) = (current.0 as f32, current.1 as f32);
-
+    pub fn draw_point(layer: &mut Layer, prev: Option<((i32, i32), (i32, i32), (i32, i32))>, current: (i32, i32), size: i32, color: &Color) -> ((i32, i32), (i32, i32), (i32, i32)) {
         match prev {
-            Some((first, second, (x0, y0))) => {
+            Some((border_l, border_r, center)) => {
 
-                let x0 = x0 as f32;
-                let y0 = y0 as f32;
+                let x0 = center.0 as f32;
+                let y0 = center.1 as f32;
+                let x1 = current.0 as f32;
+                let y1 = current.1 as f32;
 
-                let distance = ((x1-x0) as f32, (y1-y0) as f32);
-                let m = (((y1-y0) as f32),((x1-x0) as f32));
-                let theta = f32::atan2(m.1,m.0);
-                let s = f32::sin(theta);
-                let c = f32::cos(theta);
+                let m = (y1-y0)/(x1-x0);
 
-                let mut new_first = (first.0 as f32, first.1 as f32);
-                let mut new_second = (second.0 as f32, second.1 as f32);
+                if  m.is_nan() || m.is_infinite() || f32::abs(m)>= 5.0 {
+                    let p1 = Point::new(border_l.0, border_l.1);
+                    let p2 = Point::new(current.0-size/2,current.1);
+                    let p3 = Point::new(current.0+size/2,current.1);
+                    let p4 = Point::new(border_r.0,border_r.1);
 
-                new_first.0 -= x0;
-                new_first.1 -= y0;
-                new_second.0 -= x0;
-                new_second.1 -= y0;
-
-                let nx1 = new_first.0*c-new_first.1*s;
-                let nx2 = new_second.0*c-new_second.1*s;
-
-                let ny1 = new_first.0*s+new_first.1*c;
-                let ny2 = new_first.0*s+new_first.1*c;
-
-                new_first.0 = nx1+x0;
-                new_first.1 = ny1+y0;
-                new_second.0 = nx2+x0;
-                new_second.1 = ny2+y0;
-
-                let third = (new_first.0 + distance.0, new_first.1 + distance.1);
-                let fourth = (new_second.0 + distance.0, new_second.1 + distance.1);
-
-                let points = Vec::from(
-                    if x1>=x0 && y1>=y0 {
+                    let points = Vec::from(
                         [
-                            Point::new(new_first.0 as i32, new_first.1 as i32),
-                            Point::new(first.0 as i32, first.1 as i32),
-                            Point::new(third.0 as i32, third.1 as i32),
-                            Point::new(fourth.0 as i32, new_second.1 as i32),
-                            Point::new(new_second.0 as i32, new_second.1 as i32),
-                            Point::new(second.0, second.1)
+                            p1,
+                            p2,
+                            p3,
+                            p4
                         ]
-                    } else if x1<x0 && y1>y0 {
-                        [
-                            Point::new(first.0 as i32, first.1 as i32),
-                            Point::new(new_first.0 as i32, new_first.1 as i32),
-                            Point::new(third.0 as i32, third.1 as i32),
-                            Point::new(fourth.0 as i32, new_second.1 as i32),
-                            Point::new(new_second.0 as i32, new_second.1 as i32),
-                            Point::new(second.0, second.1)
-                        ]
-                    } else if x1<x0 && y1<y0{
-                        [
-                            Point::new(new_first.0 as i32, new_first.1 as i32),
-                            Point::new(first.0 as i32, first.1 as i32),
-                            Point::new(third.0 as i32, third.1 as i32),
-                            Point::new(fourth.0 as i32, new_second.1 as i32),
-                            Point::new(new_second.0 as i32, new_second.1 as i32),
-                            Point::new(second.0, second.1)
-                        ]
-                    } else {
-                        [
-                            Point::new(first.0 as i32, first.1 as i32),
-                            Point::new(new_first.0 as i32, new_first.1 as i32),
-                            Point::new(third.0 as i32, third.1 as i32),
-                            Point::new(fourth.0 as i32, new_second.1 as i32),
-                            Point::new(new_second.0 as i32, new_second.1 as i32),
-                            Point::new(second.0, second.1)
-                        ]
-                    }
-                );
+                    );
+    
+                    let poly = Polygon::from(points);
+                    imageproc::drawing::draw_polygon_mut(&mut layer.layer, &poly.vertices, color.color);
 
-                let poly = Polygon::from(points);
-                imageproc::drawing::draw_polygon_mut(&mut layer.layer, &poly.vertices, color.color);
+                    return ((current.0-size/2,current.1),(current.0+size/2,current.1),current);
+                    
+                } else if f32::abs(m)<=0.05{
+                    let p1 = Point::new(border_l.0, border_l.1);
+                    let p2 = Point::new(current.0,current.1-size/2);
+                    let p3 = Point::new(current.0,current.1+size/2);
+                    let p4 = Point::new(border_r.0,border_r.1);
 
-                return ((third.0 as i32, third.1 as i32),(fourth.0 as i32, fourth.1 as i32),current)
+                    let points = Vec::from(
+                        [
+                            p1,
+                            p2,
+                            p3,
+                            p4
+                        ]
+                    );
+    
+                    let poly = Polygon::from(points);
+                    imageproc::drawing::draw_polygon_mut(&mut layer.layer, &poly.vertices, color.color);
+
+                    return ((current.0,current.1-size/2),(current.0,current.1+size/2),current);
+                } else {
+
+                    let xl1 = border_l.0;
+                    let xr1 = border_r.0;
+                    let yl1 = border_l.1;
+                    let yr1 = border_r.1;
+
+                    let distance = (current.0 - center.0, current.1-center.1);
+
+                    let xl2 = xl1 + distance.0;
+                    let xr2 = xr1 + distance.0;
+                    let yl2 = yl1 + distance.1;
+                    let yr2 = yr1 + distance.1;
+
+                    let p1: Point<i32>;
+                    let p2: Point<i32>;
+                    let p3: Point<i32>;
+                    let p4: Point<i32>;
+
+                    p1 = Point::new(xl1 as i32,yl1 as i32);
+                    p2 = Point::new(xl2 as i32,yl2 as i32);
+                    p3 = Point::new(xr2 as i32,yr2 as i32);
+                    p4 = Point::new(xr1 as i32,yr1 as i32);
+
+                    let points = Vec::from(
+                        [
+                            p1,
+                            p2,
+                            p3,
+                            p4
+                        ]
+                    );
+    
+                    let poly = Polygon::from(points);
+                    imageproc::drawing::draw_polygon_mut(&mut layer.layer, &poly.vertices, color.color);
+
+                    return ((xl2, yl2),(xr2, yr2),current);
+                }
             },
             None => {
-                return ((current.0 - size/2, current.1),(current.1+size/2, current.1),current);
+                let border_l = (current.0-size/2, current.1);
+                let border_r = (current.0+size/2, current.1);
+
+                imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, current, size/2, color.color);
+
+                return (border_l, border_r, current);
             }
         }
+    }
+    pub fn rubber_init(&self, last_crop_data: Option<((u32, u32),(u32, u32))>) -> (Layer, Layer) {
+        let layer = self.layers[0].clone();
+        let layer = Layer::new(layer,LayerType::FreeHandDrawing);
+        let mut base = self.base.clone();
+        let base = match last_crop_data {
+            Some(last_crop_data) => {
+                base.crop(last_crop_data.0.0, last_crop_data.0.1, last_crop_data.1.0, last_crop_data.1.1)
+            },
+            None => {
+                base
+            }
+        };
+        let base = Layer::new(base,LayerType::Shape);
+        (base, layer)
+    }
+    pub fn rubber_set(&mut self, mut layer: Layer, base: &Layer, last: (i32, i32), size: i32) {
+        let color = Color::new(0, 0, 0, 0.0);
+        imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, last, size/2, color.color);
+        let layer = layer.show_rubber(base);
+        self.layers.push_front(layer);
+    }
+    pub fn rubber(layer: &mut Layer, prev: Option<((i32, i32),(i32, i32),(i32, i32))>, current: (i32, i32), size: i32) -> ((i32, i32), (i32, i32), (i32, i32)) {
+        let color = Color::new(0, 0, 0, 0.0);
+        Image::draw_point(layer, prev, current, size, &color)
     }
     ///Remove the most recent created layer
     pub fn undo(&mut self) {
@@ -278,23 +316,35 @@ impl Image {
     }
     ///Saves the image given the extension and the name one want to give it. The name includes also 
     ///the path.
-    pub fn save_as(&self, name: &str, extension: Extensions) -> Result<(),ImageManipulationError> {
-
-        let path = match extension {
-            Extensions::JPG => {
-                format!("{}.jpg",name)
-            }
-            Extensions::PNG => {
-                format!("{}.png",name)
-            }
-            Extensions::GIF => {
-                format!("{}.gif",name)
-            }
-        };
-        let _file = File::create(&path)?;
-        let image  = self.layers[0].clone();
-        image.save(path)?;
-        
+    pub fn save_as(&self, location: &str, name: &str, extension: Extensions) -> Result<(), ImageManipulationError> {    let mut n;
+        if name.len() == 0{
+            n = match extension {
+                Extensions::JPG => {
+                    format!("unnamed_{}.jpg",UNNAMED_COUNTER.fetch_add(1, Ordering::SeqCst))
+                }
+                Extensions::PNG => {
+                    format!("unnamed_{}.png",UNNAMED_COUNTER.fetch_add(1, Ordering::SeqCst))
+                }
+                Extensions::GIF => {
+                    format!("unnamed_{}.gif",UNNAMED_COUNTER.fetch_add(1, Ordering::SeqCst))
+                }
+            };
+        }else{
+            n = match extension {
+                Extensions::JPG => {
+                    format!("{}.jpg",name)
+                }
+                Extensions::PNG => {
+                    format!("{}.png",name)
+                }
+                Extensions::GIF => {
+                    format!("{}.gif",name)
+                }
+            };
+        }
+        let mut path = String::from(location);
+        path.push_str(n.as_str());    let _file = File::create(&path)?;
+        let image  = self.layers[0].clone();    image.save(path)?;
         Ok(())
     }
     ///Returns the image with all the layers stacked

@@ -1,17 +1,17 @@
 pub mod font_errors;
 
 use std::path::{PathBuf, Path};
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 use std::fs;
 use rusttype::Font;
 use std::io::Read;
 use font_errors::LoadFontError;
 use home;
 
-pub fn load_fonts() -> Result<HashMap<String, Font<'static>>, LoadFontError>{
+pub fn load_fonts() -> Result<BTreeMap<String, Font<'static>>, LoadFontError>{
 
     let font_extensions = vec!["otf".to_string(),"ttf".to_string(),"woff".to_string()];
-    let mut fonts = HashMap::new();
+    let mut fonts = BTreeMap::new();
 
     if cfg!(target_os = "windows") {
         let path = PathBuf::from(r"C:\Windows\Fonts\");
@@ -149,8 +149,8 @@ pub fn load_fonts() -> Result<HashMap<String, Font<'static>>, LoadFontError>{
 
 }
 
-pub fn load_fonts_fallback() -> Result<HashMap<String, Font<'static>>, LoadFontError> {
-    let mut fonts = HashMap::new();
+pub fn load_fonts_fallback() -> Result<BTreeMap<String, Font<'static>>, LoadFontError> {
+    let mut fonts = BTreeMap::new();
     let font_extensions = vec!["otf".to_string(),"ttf".to_string(),"woff".to_string()];
 
     let mut path = PathBuf::from(".");
