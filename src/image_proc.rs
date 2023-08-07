@@ -4,6 +4,7 @@ pub mod colors;
 pub mod image_errors;
 pub mod layer;
 pub mod blur_area;
+mod shape;
 
 use image::{DynamicImage, RgbaImage};
 use imageproc::point::Point;
@@ -20,6 +21,7 @@ use layer::{Layer, LayerType};
 use blur_area::BlurArea;
 use std::borrow::Cow;
 use eframe::egui;
+use shape::Arrow;
 
 ///Incremental counter for files whose name is not specified when saved
 static UNNAMED_COUNTER: AtomicUsize = AtomicUsize::new(0);
@@ -57,7 +59,7 @@ impl Image {
     ///The BlurArea structure is manipulated directly to modify the crop area
     ///Takes as parameters the position of the left-upper angle of the crop area and its size
     pub fn blur_area(&self, x: u32, y: u32, width: u32, height: u32) -> BlurArea {
-        let mut image = self.layers[0].clone();
+        let image = self.layers[0].clone();
         let mut blur = image.clone();
         blur = blur.brighten(100);
         BlurArea::new(image, blur, (x,y), (width,height))
@@ -74,57 +76,122 @@ impl Image {
     ///Flips the image orizontally
     pub fn flip_horizontally(&mut self) {
         let flipped = self.layers[0].fliph();
-        self.layers.pop_front();
         self.layers.push_front(flipped);
     }
     ///Flips the image vertically
     pub fn flip_vertically(&mut self) {
         let flipped = self.layers[0].flipv();
-        self.layers.pop_front();
         self.layers.push_front(flipped)
     }
     ///Rotates the image 90 degree clockwise
     pub fn rotate90cv(&mut self) {
         let rotated = self.layers[0].rotate90();
-        self.layers.pop_front();
         self.layers.push_front(rotated);
         
     }
     ///Rotates the image 180 degree clockwise
     pub fn rotate180cv(&mut self) {
         let rotated = self.layers[0].rotate180();
-        self.layers.pop_front();
         self.layers.push_front(rotated);
     }
     ///Rotates the image 270 degree clockwise
     pub fn rotate270cv(&mut self) {
         let rotated = self.layers[0].rotate270();
-        self.layers.pop_front();
         self.layers.push_front(rotated);
     }
     ///Creates an additional layer containing a filled ellipse with given center, major semiaxis, minor semiaxis and color
     pub fn draw_filled_ellipse(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
-        let mut new_canva = RgbaImage::new(size.0 as u32, size.1 as u32);
+        let pos = (center.0-size.0/2, center.1-size.1/2);
+        let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
         drawing::draw_filled_ellipse_mut(&mut new_canva, center, size.0/2, size.1/2, color.color);
+        canva.layer = DynamicImage::ImageRgba8(new_canva);
+        canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
     }
     ///Creates an additional layer containing an empty ellipse with given center, major semiaxis, minor semiaxis and color
-    pub fn draw_empty_ellipse(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
-        let mut new_canva = RgbaImage::new(size.0 as u32, size.1 as u32);
-        drawing::draw_filled_ellipse_mut(&mut new_canva, center, size.0/2, size.1/2, color.color);
+    pub fn draw_empty_ellipse(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut size: (i32, i32), color: &Color, width: i32) {
+        let pos = (center.0-size.0/2, center.1-size.1/2);
+        let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
+        let mut pos = (center.0-size.0/2, center.1-size.1/2);
+        size.0 += width;
+        size.1 += width;
+        pos.0 -= width/2;
+        pos.1 -= width/2;
+        for _ in -width/2..width/2{
+            pos.0 += 1;
+            pos.1 += 1;
+            size.0-=2;
+            size.1-=2;
+            drawing::draw_hollow_ellipse_mut(&mut new_canva, center, size.0/2, size.1/2, Color::new(0,255,0,1.0).color);
+        }
+        canva.layer = DynamicImage::ImageRgba8(new_canva);
+        canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
     }
     ///Creates an additional layer containing a filled rectangle given the upper-left corner, its dimensions and
     ///its color
     pub fn draw_filled_rectangle(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
-        let mut new_canva = RgbaImage::new(size.0 as u32, size.1 as u32);
+        let pos = (center.0-size.0/2, center.1-size.1/2);
+        let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
         let rect = Rect::at(center.0-size.0/2, center.1-size.1/2).of_size(size.0 as u32, size.1 as u32);
         drawing::draw_filled_rect_mut(&mut new_canva, rect, color.color);
+        canva.layer = DynamicImage::ImageRgba8(new_canva);
+        canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
     }
     ///Creates an additional layer containing an empty rectangle given the upper-left corner, its dimensions and
     ///its color
-    pub fn draw_empty_rectangle(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
-        let mut new_canva = RgbaImage::new(size.0 as u32, size.1 as u32);
-        let rect = Rect::at(center.0-size.0/2, center.1-size.1/2).of_size(size.0 as u32, size.1 as u32);
-        drawing::draw_filled_rect_mut(&mut new_canva, rect, color.color);
+    pub fn draw_empty_rectangle(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut size: (i32, i32), color: &Color, width: i32) {
+        let pos = (center.0-size.0/2, center.1-size.1/2);
+        let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
+        let mut pos = (center.0-size.0/2, center.1-size.1/2);
+        size.0 += width;
+        size.1 += width;
+        pos.0 -= width/2;
+        pos.1 -= width/2;
+        for _ in -width/2..width/2{
+            pos.0 += 1;
+            pos.1 += 1;
+            size.0-=2;
+            size.1-=2;
+            let rect = Rect::at(pos.0, pos.1).of_size(size.0 as u32, size.1 as u32);
+            drawing::draw_hollow_rect_mut(&mut new_canva, rect, Color::new(0,255,0,1.0).color);
+        }
+        canva.layer = DynamicImage::ImageRgba8(new_canva);
+        canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
+    }
+    pub fn draw_filled_up_arrow(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut size: (i32, i32), color: &Color) {
+        let pos = (center.0-size.0/2, center.1-size.1/2);
+        let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
+        let arrow = Arrow::up_from_size(center, size);
+        let poly = Polygon::from(arrow.vertices);
+        drawing::draw_polygon_mut(&mut new_canva, &poly.vertices, color.color);
+        canva.layer = DynamicImage::ImageRgba8(new_canva);
+        canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
+    }
+    pub fn draw_filled_right_arrow(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut size: (i32, i32), color: &Color) {
+        let pos = (center.0-size.0/2, center.1-size.1/2);
+        let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
+        let arrow = Arrow::right_from_size(center, size);
+        let poly = Polygon::from(arrow.vertices);
+        drawing::draw_polygon_mut(&mut new_canva, &poly.vertices, color.color);
+        canva.layer = DynamicImage::ImageRgba8(new_canva);
+        canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
+    }
+    pub fn draw_filled_left_arrow(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut size: (i32, i32), color: &Color) {
+        let pos = (center.0-size.0/2, center.1-size.1/2);
+        let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
+        let arrow = Arrow::left_from_size(center, size);
+        let poly = Polygon::from(arrow.vertices);
+        drawing::draw_polygon_mut(&mut new_canva, &poly.vertices, color.color);
+        canva.layer = DynamicImage::ImageRgba8(new_canva);
+        canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
+    }
+    pub fn draw_filled_down_arrow(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut size: (i32, i32), color: &Color) {
+        let pos = (center.0-size.0/2, center.1-size.1/2);
+        let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
+        let arrow = Arrow::down_from_size(center, size);
+        let poly = Polygon::from(arrow.vertices);
+        drawing::draw_polygon_mut(&mut new_canva, &poly.vertices, color.color);
+        canva.layer = DynamicImage::ImageRgba8(new_canva);
+        canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
     }
     ///Draws a line given the initial and final point and the color of the line
     pub fn draw_line(&mut self, start: (i32, i32), end: (i32, i32), color: &Color) {
@@ -306,8 +373,11 @@ impl Image {
     }
 
     ///Remove the most recent created layer
-    pub fn undo(&mut self) {
-        self.layers.pop_front();
+    pub fn undo(&mut self) -> DynamicImage {
+        if self.layers.len() > 1 {
+            self.layers.pop_front();
+        }
+        self.layers[0].clone()
     }
     ///Saves the image given the extension. This is used if no name is provided and the given name is
     ///unnamed_N, where N is an incremental counter starting from 0
