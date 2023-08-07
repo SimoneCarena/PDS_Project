@@ -100,31 +100,31 @@ impl Image {
         self.layers.push_front(rotated);
     }
     ///Creates an additional layer containing a filled ellipse with given center, major semiaxis, minor semiaxis and color
-    pub fn draw_filled_ellipse(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
-        let pos = (center.0-size.0/2, center.1-size.1/2);
+    pub fn draw_filled_circle(canva: &mut Layer, base: &mut Layer, center: (i32, i32), diameter: i32, color: &Color) {
+        let pos = (center.0-diameter/2, center.1-diameter/2);
+        //println!("{:?}",(base.layer.width() as u32, base.layer.height() as u32));
         let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
-        drawing::draw_filled_ellipse_mut(&mut new_canva, center, size.0/2, size.1/2, color.color);
+        drawing::draw_filled_circle_mut(&mut new_canva, center, diameter, color.color);
         canva.layer = DynamicImage::ImageRgba8(new_canva);
-        canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
+        canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(diameter as u32, diameter as u32)));
     }
     ///Creates an additional layer containing an empty ellipse with given center, major semiaxis, minor semiaxis and color
-    pub fn draw_empty_ellipse(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut size: (i32, i32), color: &Color, width: i32) {
-        let pos = (center.0-size.0/2, center.1-size.1/2);
+    pub fn draw_empty_circle(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut diameter: i32, color: &Color, width: i32) {
+        let pos_2 = ((center.0-diameter/2) as u32, (center.1-diameter/2) as u32);
+        let size_2 = (diameter as u32, diameter as u32);
         let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
-        let mut pos = (center.0-size.0/2, center.1-size.1/2);
-        size.0 += width;
-        size.1 += width;
+        let mut pos = (center.0-diameter/2, center.1-diameter/2);
+        diameter+=width;
         pos.0 -= width/2;
         pos.1 -= width/2;
         for _ in -width/2..width/2{
             pos.0 += 1;
             pos.1 += 1;
-            size.0-=2;
-            size.1-=2;
-            drawing::draw_hollow_ellipse_mut(&mut new_canva, center, size.0/2, size.1/2, Color::new(0,255,0,1.0).color);
+            diameter-=2;
+            drawing::draw_hollow_circle_mut(&mut new_canva, center, diameter/2, Color::new(0,255,0,1.0).color);
         }
         canva.layer = DynamicImage::ImageRgba8(new_canva);
-        canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
+        canva.layer_type = LayerType::Shape(((pos_2.0, pos_2.1),(size_2.0, size_2.1)));
     }
     ///Creates an additional layer containing a filled rectangle given the upper-left corner, its dimensions and
     ///its color
@@ -139,7 +139,8 @@ impl Image {
     ///Creates an additional layer containing an empty rectangle given the upper-left corner, its dimensions and
     ///its color
     pub fn draw_empty_rectangle(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut size: (i32, i32), color: &Color, width: i32) {
-        let pos = (center.0-size.0/2, center.1-size.1/2);
+        let pos_2 = ((center.0-size.0/2) as u32, (center.1-size.1/2) as u32);
+        let size_2 = (size.0 as u32, size.1 as u32);
         let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
         let mut pos = (center.0-size.0/2, center.1-size.1/2);
         size.0 += width;
@@ -155,7 +156,7 @@ impl Image {
             drawing::draw_hollow_rect_mut(&mut new_canva, rect, Color::new(0,255,0,1.0).color);
         }
         canva.layer = DynamicImage::ImageRgba8(new_canva);
-        canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
+        canva.layer_type = LayerType::Shape(((pos_2.0, pos_2.1),(size_2.0, size_2.1)));
     }
     pub fn draw_filled_up_arrow(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut size: (i32, i32), color: &Color) {
         let pos = (center.0-size.0/2, center.1-size.1/2);
@@ -462,7 +463,7 @@ impl Image {
     }
 
     pub fn shape_set(&mut self, base: Layer, shape_layer: Layer) {
-        let image = shape_layer.show_shape(&base);
+        let image = shape_layer.draw_shape(&base);
         self.layers.push_front(image);
     }
 

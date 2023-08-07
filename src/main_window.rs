@@ -58,6 +58,15 @@ pub enum DrawStatus{
     Shape(u8)
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Shape{
+    FilledRectangle,
+    EmptyRectangle,
+    FilledCircle,
+    EmptyCircle,
+    Arrow
+}
+
 impl Default for DrawStatus{
     fn default() -> Self{
         DrawStatus::Draw
@@ -117,6 +126,7 @@ pub struct MyApp {
     highlight_color: Color,
     highlight_thickness: i32,
     highlight_alpha: f32,
+    which_shape: Option<Shape>,
 }
 
 impl MyApp {
@@ -167,6 +177,7 @@ impl MyApp {
             highlight_color: Color::new(255, 255, 0, 0.3),
             highlight_thickness: 5,
             highlight_alpha: 0.3,
+            which_shape: None
         };
 
         match File::open("settings/settings"){
@@ -861,91 +872,83 @@ fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
 fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
 
     egui::CentralPanel::default().show(ctx, |ui| {
-
+        app.dropdown_on = false;
         let window_size = Vec2::new(ctx.screen_rect().width() - 5.0, ctx.screen_rect().height() - 60.0);
         let image_size = app.backup_image.as_ref().unwrap().size_vec2();
         app.window_image_ratio = min_my(window_size.y / image_size.y, window_size.x / image_size.x);
 
         ui.horizontal(|ui| {
+
             ui.style_mut().visuals.override_text_color = Some(egui::Color32::WHITE);
-            // color picker, thickness
-            if app.rubber {
-                if ui.button("✏ Draw").on_hover_text("Free-hand drawing").clicked(){
-                    app.highlight = false;
-                    app.rubber = !app.rubber;
-                    app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
-                }
-                ui.add(egui::Slider::new(&mut app.pencil_rubber_thickness, 1..=20).text("Rubber Size"));
-                ui.horizontal(|ui|{
-                    if !app.is_sel_color && ui.add(egui::Button::new("Edit Color")).clicked() {
-                        app.is_sel_color = true;
-                    }
-
-                    if app.is_sel_color {
-                        app.dropdown_on = true;
-                        let mut color_vec = [app.draw_color.color.0[0], app.draw_color.color.0[1], app.draw_color.color.0[2]];
-                        egui::widgets::color_picker::color_edit_button_srgb(ui, &mut color_vec);
-
-                        app.draw_color.color.0[0] = color_vec[0];
-                        app.draw_color.color.0[1] = color_vec[1];
-                        app.draw_color.color.0[2] = color_vec[2];
-
-                        if ui.add(egui::Button::new("OK")).clicked() {
-                            app.is_sel_color = false;
+            if ui.button("✏ Draw").on_hover_text("Free-hand drawing").clicked(){
+                    app.rubber = false;
+                    if app.draw_layer.is_some() && app.rubber_layer.is_some(){
+                        match app.draw_status{
+                            DrawStatus::Shape(1) => app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap()),
+                            _ => {}
                         }
                     }
-                });
-            }else {
-                if ui.button("🗑 Erase").on_hover_text("Erase annotations").clicked() {
-                    app.highlight = false;
-                    app.rubber = !app.rubber;
-                    if app.rubber {
-                        let (rl, dl) = app.image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
-                        app.rubber_layer = Some(rl);
-                        app.draw_layer = Some(dl);
+                    app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
+                    app.draw_status = DrawStatus::Draw;
+            }
+            if ui.button("🗑 Erase").on_hover_text("Erase annotations").clicked() {
+                    app.rubber = true;
+                    if app.draw_layer.is_some() && app.rubber_layer.is_some(){
+                        match app.draw_status{
+                            DrawStatus::Shape(1) => app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap()),
+                            _ => {}
+                        }
+                    }
+
+                    let (rl, dl) = app.image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
+                    app.rubber_layer = Some(rl);
+                    app.draw_layer = Some(dl);
+                    app.draw_status = DrawStatus::Rubber;
+            }
+            if ui.button("📌 Highlight").on_hover_text("Activate highlighter").clicked() {
+                app.rubber = false;
+                if app.draw_layer.is_some() && app.rubber_layer.is_some(){
+                    match app.draw_status{
+                        DrawStatus::Shape(1) => app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap()),
+                        _ => {}
                     }
                 }
-                ui.add(egui::Slider::new(&mut app.pencil_rubber_thickness, 1..=20).text("Pencil Size"));
-            }
-
-            if ui.button("📌 Highlight").on_hover_text("Activate highlighter").clicked(){
-                app.highlight = true;
                 let (rl, dl) = app.image_to_save.as_ref().unwrap().highlight_init();
                 app.rubber_layer = Some(rl);
                 app.draw_layer = Some(dl);
-
-                ui.horizontal(|ui|{
-                    if !app.is_sel_color && ui.add(egui::Button::new("Edit Color")).clicked() {
-                        app.is_sel_color = true;
-                    }
-
-                    if app.is_sel_color {
-                        app.dropdown_on = true;
-                        let mut color_vec = [app.highlight_color.color.0[0], app.highlight_color.color.0[1], app.highlight_color.color.0[2]];
-                        egui::widgets::color_picker::color_edit_button_srgb(ui, &mut color_vec);
-
-                        app.highlight_color.color.0[0] = color_vec[0];
-                        app.highlight_color.color.0[1] = color_vec[1];
-                        app.highlight_color.color.0[2] = color_vec[2];
-
-                        if ui.add(egui::Button::new("OK")).clicked() {
-                            app.is_sel_color = false;
-                        }
-                    }
-                });
-
-                ui.vertical(|ui|{
-                    ui.add(egui::Slider::new(&mut app.highlight_thickness, 1..=20).text("Marker Size"));
-                    ui.add(egui::Slider::new(&mut app.highlight_alpha, 0.0..=1.0).text("Marker Transparency"));
-                });
-
+                app.draw_status = DrawStatus::Highlight;
             }
 
-            if ui.button("Rect").clicked(){
-                //app.shape = true;
-                //app.highlight = false;
-                //app.shape_pressed = 0u8;
+            ui.add(egui::Slider::new(&mut app.pencil_rubber_thickness, 1..=20).text("Trait size"));
+
+            if ui.button("Shape").clicked(){
+                if app.draw_layer.is_some() && app.rubber_layer.is_some(){
+                    match app.draw_status{
+                        DrawStatus::Shape(1) => app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap()),
+                        _ => {}
+                    }
+                }
+                app.which_shape = Some(Shape::FilledRectangle);
                 app.draw_status = DrawStatus::Shape(0);
+            }
+
+            if !app.rubber && !app.is_sel_color && ui.add(egui::Button::new("Edit Color")).clicked() {
+                app.is_sel_color = true;
+            }
+
+            if app.is_sel_color {
+                app.dropdown_on = true;
+                let mut color_vec = [app.draw_color.color.0[0], app.draw_color.color.0[1], app.draw_color.color.0[2]];
+                egui::widgets::color_picker::color_edit_button_srgb(ui, &mut color_vec);
+
+                app.draw_color.color.0[0] = color_vec[0];
+                app.draw_color.color.0[1] = color_vec[1];
+                app.draw_color.color.0[2] = color_vec[2];
+
+                if ui.add(egui::Button::new("OK")).clicked() {
+                    app.is_sel_color = false;
+                    app.dropdown_on = false;
+                }
             }
         });
 
@@ -954,180 +957,256 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
         match ctx.input(|i| i.pointer.hover_pos()) {
             None => {}
             Some(pos) => {
-                match app.draw_status {
-                    DrawStatus::Draw | DrawStatus::Highlight | DrawStatus::Rubber => {},
-                    DrawStatus::Shape(click) => {
-                        match click {
-                            0 => {
-                                if pos.x - offset > 0.0 && pos.x - offset < image_size.x * app.window_image_ratio
-                                    && pos.y > 25.0 && pos.y < (image_size.y * app.window_image_ratio + 25.0) && !app.any_pressed && !app.dropdown_on {
+
+                //if pos.x - offset > 0.0 && pos.x - offset < image_size.x * app.window_image_ratio
+                    //&& pos.y > 25.0 && pos.y < (image_size.y * app.window_image_ratio + 25.0) && !app.any_pressed && !app.dropdown_on {
+                    match app.draw_status {
+                        DrawStatus::Draw | DrawStatus::Highlight | DrawStatus::Rubber => {
+                            if pos.x - offset > 0.0 && pos.x - offset < image_size.x * app.window_image_ratio
+                                && pos.y > 25.0 && pos.y < (image_size.y * app.window_image_ratio + 25.0) && !app.dropdown_on{
+
+                            let scaled_pos = cursor_position(((pos.x-offset) as u32, (pos.y-25.0) as u32), app.window_image_ratio);
+                            app.cur_mouse_pos = Some(scaled_pos);
+                            let cur = app.cur_mouse_pos.unwrap().clone();
+
+                            match ctx.input(|i| i.pointer.any_pressed()) && !app.dropdown_on{
+                                true => {
+                                    app.any_pressed = true;
+                                },
+                                false => {}
+                            }
+
+                            let mut di;
+                            if app.any_pressed {
+                                match app.draw_status {
+                                    DrawStatus::Draw => {
+                                        app.prev_edge = Some(Image::draw_point(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), app.pencil_rubber_thickness, &app.draw_color));
+                                        di = app.draw_layer.as_ref().unwrap().show();
+                                        app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
+                                    },
+                                    DrawStatus::Rubber => {
+                                        app.prev_edge = Some(Image::rubber(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), app.pencil_rubber_thickness));
+                                        di = app.draw_layer.as_ref().unwrap().show_rubber(app.rubber_layer.as_ref().unwrap());
+                                        app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
+                                    },
+                                    DrawStatus::Highlight => {
+                                        app.prev_edge = Some(Image::highlight(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), app.pencil_rubber_thickness, &image_proc::colors::Color::new(app.draw_color.color[0], app.draw_color.color[1], app.draw_color.color[2], 0.3)));
+                                        di = app.draw_layer.as_ref().unwrap().show_higlight(app.rubber_layer.as_ref().unwrap());
+                                        app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
+                                    },
+                                    _ => {}
+                                }
+                            }
+
+                            if ctx.input(|i| i.pointer.any_released()) && app.any_pressed {
+                                app.any_pressed = false;
+                                match app.draw_status {
+                                    DrawStatus::Draw => {
+                                        app.image_to_save.as_mut().unwrap().free_hand_draw_set(app.draw_layer.take().unwrap(), app.prev_edge.unwrap().clone().2, 5, &image_proc::colors::Color::new(255, 0, 0, 1.0));
+                                        app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
+                                    },
+                                    DrawStatus::Rubber => {
+                                        app.image_to_save.as_mut().unwrap().rubber_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, 5);
+                                        let (rl, dl) = app.image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
+                                        app.rubber_layer = Some(rl);
+                                        app.draw_layer = Some(dl);
+                                    },
+                                    DrawStatus::Highlight => {
+                                        app.image_to_save.as_mut().unwrap().highlight_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, 5, &image_proc::colors::Color::new(255, 255, 0, 0.3));
+                                        let (rl, dl) = app.image_to_save.as_ref().unwrap().highlight_init();
+                                        app.rubber_layer = Some(rl);
+                                        app.draw_layer = Some(dl);
+                                    }
+                                    _ => {}
+                                }
+                                app.prev_edge = None;
+                            }
+                        }},
+                        DrawStatus::Shape(click) => {
+                            match click {
+                                0 => {
+                                    if pos.x - offset > 0.0 && pos.x - offset < image_size.x * app.window_image_ratio
+                                    && pos.y > 25.0 && pos.y < (image_size.y * app.window_image_ratio + 25.0) && !app.dropdown_on { //&& !app.any_pressed
                                     //println!("Dentro");
                                     match ctx.input(|i| i.pointer.any_click()) {
-                                        true => {   // RIVEDERE CODICE TESTO
+                                        true => {
                                             app.any_pressed = true;
-                                            //let start = (pos.x as i32, pos.y as i32);
-                                            let start = cursor_position(((pos.x - offset) as u32, (pos.y - 25.0) as u32), app.window_image_ratio);
-                                            //let start = (start.0 as i32, start.1 as i32);
-                                            // spaw figure
+                                            let mut start = cursor_position(((pos.x - offset) as u32, (pos.y - 25.0) as u32), app.window_image_ratio);
+
+                                            // controllo inizio rettangolo
+                                            if start.0 < 150 {
+                                                start.0 = 150;
+                                            }else if start.0 > (image_size.x - 150.0) as u32 {
+                                                start.0 = (image_size.x - 150.0) as u32;
+                                            }
+
+                                            if start.1 < 100{
+                                                start.1 = 100;
+                                            }else if start.1 > (image_size.y - 100.0) as u32 {
+                                                start.1 = (image_size.y - 100.0) as u32;
+                                            }
+
                                             let (rl, dl) = app.image_to_save.as_ref().unwrap().shape_init(start, (300, 200));
                                             app.rubber_layer = Some(rl);
                                             app.draw_layer = Some(dl);
-                                            Image::draw_filled_rectangle(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), (300, 200), &image_proc::colors::Color::new(255, 0, 0, 1.0));
+
+                                            //Image::draw_filled_rectangle(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), (300, 200), &app.draw_color);
+                                            Image::draw_filled_circle(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), 400, &app.draw_color);
                                             di = app.draw_layer.as_ref().unwrap().show_shape(app.rubber_layer.as_ref().unwrap());
                                             app.image = Some(
                                                 ctx.load_texture("my-image",
                                                                  get_image_from_memory(di, 0, 0, 1, 1),
                                                                  Default::default()
                                                 ));
-
-                                            /* app.backup_image_to_save.as_mut().unwrap().put_text(
-                                                 start,
-                                                 &app.sel_color,
-                                                 app.image_text.as_str(),
-                                                 (app.sel_font_size as f32)*5.0,/**app.window_image_ratio*20.0,*/
-                                                 app.fonts.as_ref().unwrap().get(app.sel_font.as_ref().unwrap().as_str()).unwrap()
-                                             );
-                                             app.any_pressed = false;
-                                             app.backup_image = Some(ctx.load_texture(
-                                                 "my-image",
-                                                 get_image_from_memory(app.backup_image_to_save.as_ref().unwrap().show(), 0, 0, 1, 1),
-                                                 Default::default()
-                                             ));*/
-
                                         }
                                         false => {}
                                     }
 
-                                    match  ctx.input(|i| i.pointer.any_released()) && app.any_pressed{
+                                    match ctx.input(|i| i.pointer.any_released()) && app.any_pressed {
                                         true => {
                                             app.draw_status = DrawStatus::Shape(1);
                                             app.any_pressed = false;
                                         }
                                         _ => {}
                                     }
-                                }
-                            },
-                            1 => {
-                                //println!("OOOOOO");
-                                let ((x, y), (w, h)) = app.draw_layer.as_ref().unwrap().get_pos_size().unwrap();
-                                let upleft = (x, y);
-                                let upright = (x + w, y);
-                                let downleft = (x, y + h);
-                                let downright = (x + w, y + h);
-
-                                println!("{:?}", (x,y));
-
-                                let c1 = cursor_position(upleft, 1.0 / app.window_image_ratio);
-                                let c1 = (c1.0 as f32, c1.1 as f32);
-                                let c2 = cursor_position(upright, 1.0 / app.window_image_ratio);
-                                let c2 = (c2.0 as f32, c2.1 as f32);
-                                let c3 = cursor_position(downleft, 1.0 / app.window_image_ratio);
-                                let c3 = (c3.0 as f32, c3.1 as f32);
-                                let c4 = cursor_position(downright, 1.0 / app.window_image_ratio);
-                                let c4 = (c4.0 as f32, c4.1 as f32);
-
-                                println!("{:?} {}", pos, offset);
-                                println!("{:?} {:?} {:?} {:?}", c1, c2, c3, c4);
-
-                                if (pos.x - offset > c1.0 && pos.x - offset < c1.0 + 10.0) && (pos.y -25.0> c1.1 && pos.y -25.0< c1.1 + 20.0) {
-                                    println!("Angolo!!");
-                                    if ctx.input(|i| i.pointer.any_pressed()) {
-                                        app.any_pressed = true;
-                                        app.corner = Some(Corner::UpLeft);
-                                        //println!("pressed");
                                     }
-                                }
-                                //basso a sx
-                                else if (pos.x - offset > c3.0 && pos.x - offset < c3.0 + 10.0) && ((pos.y-25.0 > c3.1 - 10.0) && (pos.y-25.0 < c3.1 + 10.0)) {
-                                    println!("Angolo!!");
-                                    if ctx.input(|i| i.pointer.any_pressed()) {
-                                        app.any_pressed = true;
-                                        app.corner = Some(Corner::DownLeft);
-                                        //println!("pressed");
-                                    }
-                                }
-                                //alto a dx
-                                else if ((pos.x - offset > c2.0 - 10.0) && (pos.x - offset < c2.0 + 10.0)) && (pos.y-25.0 > c2.1 && pos.y-25.0 < c2.1 + 20.0) {
-                                    println!("Angolo!!");
-                                    if ctx.input(|i| i.pointer.any_pressed()) {
-                                        app.corner = Some(Corner::UpRight);
-                                        app.any_pressed = true;
-                                        //println!("pressed");
-                                    }
-                                }
-                                //basso a dx
-                                else if ((pos.x - offset > c4.0 - 10.0) && (pos.x - offset < c4.0 + 10.0)) && ((pos.y-25.0 > c4.1 - 10.0) && (pos.y-25.0 < c4.1 + 10.0)) {
-                                    println!("Angolo!!");
-                                    if ctx.input(|i| i.pointer.any_pressed()) {
-                                        app.corner = Some(Corner::DownRight);
-                                        app.any_pressed = true;
-                                        //println!("pressed");
-                                    }
-                                }
+                                },
+                                1 => {
+                                    //println!("OOOOOO");
+                                    let ((x, y), (w, h)) = app.draw_layer.as_ref().unwrap().get_pos_size().unwrap();
+                                    let upleft = (x, y);
+                                    let upright = (x + w, y);
+                                    let downleft = (x, y + h);
+                                    let downright = (x + w, y + h);
 
-                                if app.any_pressed {
-                                    match app.cur_mouse_pos {
-                                        None => {}
-                                        Some(p) => {
-                                            app.prev_mouse_pos = Some(p);
+                                    //println!("{:?}", (x, y));
+
+                                    let c1 = cursor_position(upleft, 1.0 / app.window_image_ratio);
+                                    let c1 = (c1.0 as f32, c1.1 as f32);
+                                    let c2 = cursor_position(upright, 1.0 / app.window_image_ratio);
+                                    let c2 = (c2.0 as f32, c2.1 as f32);
+                                    let c3 = cursor_position(downleft, 1.0 / app.window_image_ratio);
+                                    let c3 = (c3.0 as f32, c3.1 as f32);
+                                    let c4 = cursor_position(downright, 1.0 / app.window_image_ratio);
+                                    let c4 = (c4.0 as f32, c4.1 as f32);
+
+                                    //println!("{:?} {}", pos, offset);
+                                    //println!("{:?} {:?} {:?} {:?}", c1, c2, c3, c4);
+
+                                    if (pos.x - offset > c1.0 && pos.x - offset < c1.0 + 10.0) && (pos.y - 25.0 > c1.1 && pos.y - 25.0 < c1.1 + 20.0) {
+                                        //println!("Angolo!!");
+                                        if ctx.input(|i| i.pointer.any_pressed()) {
+                                            app.any_pressed = true;
+                                            app.corner = Some(Corner::UpLeft);
+                                            //println!("pressed");
+                                        }
+                                    }
+                                    //basso a sx
+                                    else if (pos.x - offset > c3.0 && pos.x - offset < c3.0 + 10.0) && ((pos.y - 25.0 > c3.1 - 10.0) && (pos.y - 25.0 < c3.1 + 10.0)) {
+                                        //println!("Angolo!!");
+                                        if ctx.input(|i| i.pointer.any_pressed()) {
+                                            app.any_pressed = true;
+                                            app.corner = Some(Corner::DownLeft);
+                                            //println!("pressed");
+                                        }
+                                    }
+                                    //alto a dx
+                                    else if ((pos.x - offset > c2.0 - 10.0) && (pos.x - offset < c2.0 + 10.0)) && (pos.y - 25.0 > c2.1 && pos.y - 25.0 < c2.1 + 20.0) {
+                                        //println!("Angolo!!");
+                                        if ctx.input(|i| i.pointer.any_pressed()) {
+                                            app.corner = Some(Corner::UpRight);
+                                            app.any_pressed = true;
+                                            //println!("pressed");
+                                        }
+                                    }
+                                    //basso a dx
+                                    else if ((pos.x - offset > c4.0 - 10.0) && (pos.x - offset < c4.0 + 10.0)) && ((pos.y - 25.0 > c4.1 - 10.0) && (pos.y - 25.0 < c4.1 + 10.0)) {
+                                        //println!("Angolo!!");
+                                        if ctx.input(|i| i.pointer.any_pressed()) {
+                                            app.corner = Some(Corner::DownRight);
+                                            app.any_pressed = true;
+                                            //println!("pressed");
                                         }
                                     }
 
-                                    let (xr, yr) = cursor_position(((pos.x - offset) as u32, (pos.y-25.0) as u32), app.window_image_ratio);
+                                    if app.any_pressed {
+                                        match app.cur_mouse_pos {
+                                            None => {}
+                                            Some(p) => {
+                                                app.prev_mouse_pos = Some(p);
+                                            }
+                                        }
 
-                                    app.cur_mouse_pos = Some((xr, yr));
+                                        let (xr, yr) = cursor_position(((pos.x - offset) as u32, (pos.y - 25.0) as u32), app.window_image_ratio);
 
-                                    match app.prev_mouse_pos {
-                                        None => {}
-                                        Some(p) => {
-                                            let ((x, y), (w, h)) = app.draw_layer.as_ref().unwrap().get_pos_size().unwrap();  //app.bl_ar.as_ref().unwrap().get_crop_data();
-                                            //println!("{:?} {:?}", app.prev_mouse_pos.unwrap(), app.cur_mouse_pos.unwrap());
+                                        app.cur_mouse_pos = Some((xr, yr));
 
-                                            let ((xn, yn), (wn, hn)) = get_new_area(
-                                                app.prev_mouse_pos.unwrap(),
-                                                app.cur_mouse_pos.unwrap(),
-                                                (x, y),
-                                                (w, h),
-                                                (app.image_to_save.as_ref().unwrap().width(), app.image_to_save.as_ref().unwrap().height()),
-                                                app.corner.unwrap()
-                                            );
+                                        match app.prev_mouse_pos {
+                                            None => {}
+                                            Some(p) => {
+                                                let ((x, y), (w, h)) = app.draw_layer.as_ref().unwrap().get_pos_size().unwrap();  //app.bl_ar.as_ref().unwrap().get_crop_data();
+                                                //println!("{:?} {:?}", app.prev_mouse_pos.unwrap(), app.cur_mouse_pos.unwrap());
 
-                                            Image::draw_filled_rectangle(app.draw_layer.as_mut().unwrap(),
-                                                                         app.rubber_layer.as_mut().unwrap(),
-                                                                         ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
-                                                                         (wn as i32, hn as i32), & image_proc::colors::Color::new(255, 0, 0, 1.0)
-                                            );
+                                                /*let ((xn, yn), (wn, hn)) = get_new_area(
+                                                    app.prev_mouse_pos.unwrap(),
+                                                    app.cur_mouse_pos.unwrap(),
+                                                    (x, y),
+                                                    (w, h),
+                                                    (app.image_to_save.as_ref().unwrap().width(), app.image_to_save.as_ref().unwrap().height()),
+                                                    app.corner.unwrap()
+                                                );*/
 
-                                            let di = app.draw_layer.as_ref().unwrap().show_shape(app.rubber_layer.as_ref().unwrap());    //app.bl_ar.as_ref().unwrap().show();
+                                                let ((xn, yn), (wn, hn)) = get_new_area_circle(
+                                                    app.prev_mouse_pos.unwrap(),
+                                                    app.cur_mouse_pos.unwrap(),
+                                                    (x, y),
+                                                    w,
+                                                    (app.image_to_save.as_ref().unwrap().width(), app.image_to_save.as_ref().unwrap().height()),
+                                                    app.corner.unwrap()
+                                                );
 
-                                            app.image = Some(ctx.load_texture(
-                                                "my-image",
-                                                get_image_from_memory(di, 0, 0, 1, 1),
-                                                Default::default()
-                                            ));
+                                                /*Image::draw_filled_rectangle(app.draw_layer.as_mut().unwrap(),
+                                                                             app.rubber_layer.as_mut().unwrap(),
+                                                                             ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                             (wn as i32, hn as i32), &app.draw_color
+                                                );*/
+
+                                                Image::draw_filled_circle(app.draw_layer.as_mut().unwrap(),
+                                                                          app.rubber_layer.as_mut().unwrap(),
+                                                                          ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                          wn as i32, &app.draw_color);
+
+                                                let di = app.draw_layer.as_ref().unwrap().show_shape(app.rubber_layer.as_ref().unwrap());    //app.bl_ar.as_ref().unwrap().show();
+
+                                                app.image = Some(ctx.load_texture(
+                                                    "my-image",
+                                                    get_image_from_memory(di, 0, 0, 1, 1),
+                                                    Default::default()
+                                                ));
+                                            }
+                                        }
+
+                                        match app.corner.unwrap() {
+                                            Corner::UpLeft | Corner::UpRight | Corner::DownLeft => {
+                                                let (x, y) = cursor_position(((pos.x - offset) as u32, pos.y as u32), 1.0 / app.window_image_ratio);
+                                                app.anchor_corner = Some(((x as f32, y as f32), app.window_image_ratio));
+                                            }
+                                            _ => {} //inutile
                                         }
                                     }
 
-                                    match app.corner.unwrap() {
-                                        Corner::UpLeft | Corner::UpRight | Corner::DownLeft => {
-                                            let (x, y) = cursor_position(((pos.x - offset) as u32, pos.y as u32), 1.0 / app.window_image_ratio);
-                                            app.anchor_corner = Some(((x as f32, y as f32), app.window_image_ratio));
-                                        }
-                                        _ => {} //inutile
+                                    if ctx.input(|i| i.pointer.any_released()) && app.any_pressed {
+                                        app.any_pressed = false;
+                                        app.corner = None;
+                                        app.prev_mouse_pos = None;
+                                        app.cur_mouse_pos = None;
                                     }
                                 }
-
-                                if ctx.input(|i| i.pointer.any_released()) && app.any_pressed {
-                                    app.any_pressed = false;
-                                    app.corner = None;
-                                    app.prev_mouse_pos = None;
-                                    app.cur_mouse_pos = None;
-                                }
+                                _ => {}
                             }
-                            _ => {}
-                        }
-                    },
-                }
+                        },
+                    }
+                //}
             }
         }
 
@@ -1254,10 +1333,10 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
         ui.horizontal(|ui| {
             ui.style_mut().visuals.override_text_color = Some(egui::Color32::WHITE);
             if ui.add(egui::Button::new("OK")).clicked() {
-                app.image_to_save.as_mut().unwrap().shape_set(app.draw_layer.take().unwrap(), app.rubber_layer.take().unwrap());
+                app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
                 app.prev = app.status;
                 app.status = Image;
-                //app.draw_status = DrawStatus::Shape(0);
+                app.draw_status = DrawStatus::Shape(0);
             }
             if ui.add(egui::Button::new("Back")).clicked(){
                 app.prev = app.status;
