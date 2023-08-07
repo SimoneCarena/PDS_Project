@@ -1050,7 +1050,16 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                         app.draw_status = DrawStatus::Highlight;
                     }
 
-                    ui.add(egui::Slider::new(&mut app.pencil_rubber_thickness, 1..=20).text("Trait size"));
+                    match app.draw_status{
+                        DrawStatus::Draw | DrawStatus::Rubber => {
+                            ui.add(egui::Slider::new(&mut app.pencil_rubber_thickness, 1..=40).text("Trait size"));
+                        }
+                        DrawStatus::Highlight => {
+                            ui.add(egui::Slider::new(&mut app.highlight_thickness, 1..=40).text("Trait size"));
+                        }
+                        DrawStatus::Shape(_) => {}
+                    }
+
                 });
                 ui.horizontal(|ui| {
                     ui.label("SHAPES");
@@ -1213,12 +1222,27 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
 
                     if app.is_sel_color {
                         app.dropdown_on = true;
-                        let mut color_vec = [app.draw_color.color.0[0], app.draw_color.color.0[1], app.draw_color.color.0[2]];
-                        egui::widgets::color_picker::color_edit_button_srgb(ui, &mut color_vec);
 
-                        app.draw_color.color.0[0] = color_vec[0];
-                        app.draw_color.color.0[1] = color_vec[1];
-                        app.draw_color.color.0[2] = color_vec[2];
+                        match app.draw_status{
+                            DrawStatus::Draw |  DrawStatus::Shape(_) | DrawStatus::Rubber=> {
+                                let mut color_vec = [app.draw_color.color.0[0], app.draw_color.color.0[1], app.draw_color.color.0[2]];
+                                egui::widgets::color_picker::color_edit_button_srgb(ui, &mut color_vec);
+
+                                app.draw_color.color.0[0] = color_vec[0];
+                                app.draw_color.color.0[1] = color_vec[1];
+                                app.draw_color.color.0[2] = color_vec[2];
+                            }
+                            DrawStatus::Highlight => {
+                                let mut color_vec = [app.highlight_color.color.0[0], app.highlight_color.color.0[1], app.highlight_color.color.0[2]];
+                                egui::widgets::color_picker::color_edit_button_srgb(ui, &mut color_vec);
+
+                                app.highlight_color.color.0[0] = color_vec[0];
+                                app.highlight_color.color.0[1] = color_vec[1];
+                                app.highlight_color.color.0[2] = color_vec[2];
+                            }
+                        }
+
+
 
                         if ui.add(egui::Button::new("OK")).clicked() {
                             app.is_sel_color = false;
@@ -1272,7 +1296,7 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                                                 app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
                                             },
                                             DrawStatus::Rubber => {
-                                                app.prev_edge = Some(Image::rubber(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), app.pencil_rubber_thickness));
+                                                app.prev_edge = Some(Image::rubber(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), app.pencil_rubber_thickness*2));
                                                 di = app.draw_layer.as_ref().unwrap().show_rubber(app.rubber_layer.as_ref().unwrap());
                                                 app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
                                             },
@@ -1289,17 +1313,17 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                                         app.any_pressed = false;
                                         match app.draw_status {
                                             DrawStatus::Draw => {
-                                                app.image_to_save.as_mut().unwrap().free_hand_draw_set(app.draw_layer.take().unwrap(), app.prev_edge.unwrap().clone().2, 5, &image_proc::colors::Color::new(255, 0, 0, 1.0));
+                                                app.image_to_save.as_mut().unwrap().free_hand_draw_set(app.draw_layer.take().unwrap(), app.prev_edge.unwrap().clone().2, app.pencil_rubber_thickness, &app.draw_color);
                                                 app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
                                             },
                                             DrawStatus::Rubber => {
-                                                app.image_to_save.as_mut().unwrap().rubber_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, 5);
+                                                app.image_to_save.as_mut().unwrap().rubber_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, app.pencil_rubber_thickness*2);
                                                 let (rl, dl) = app.image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
                                                 app.rubber_layer = Some(rl);
                                                 app.draw_layer = Some(dl);
                                             },
                                             DrawStatus::Highlight => {
-                                                app.image_to_save.as_mut().unwrap().highlight_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, 5, &image_proc::colors::Color::new(255, 255, 0, 0.3));
+                                                app.image_to_save.as_mut().unwrap().highlight_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, app.highlight_thickness, &app.highlight_color);
                                                 let (rl, dl) = app.image_to_save.as_ref().unwrap().highlight_init();
                                                 app.rubber_layer = Some(rl);
                                                 app.draw_layer = Some(dl);
@@ -1709,6 +1733,7 @@ fn settings_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
     egui::CentralPanel::default().show(ctx, |ui| {
         egui::ScrollArea::vertical()
             .scroll_bar_visibility(ScrollBarVisibility::VisibleWhenNeeded)
+            .drag_to_scroll(false)
             .auto_shrink([false; 2])
             .show(ui, |ui|{
                 ui.style_mut().visuals.override_text_color = Some(egui::Color32::WHITE);
