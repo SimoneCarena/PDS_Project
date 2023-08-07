@@ -1,4 +1,4 @@
-use image::{DynamicImage, imageops::overlay};
+use image::{DynamicImage, imageops::overlay, RgbaImage};
 
 #[derive(Clone)]
 pub struct Layer {
@@ -6,11 +6,13 @@ pub struct Layer {
     pub layer_type: LayerType
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum LayerType {
     Text,
-    Shape,
-    FreeHandDrawing
+    //hold the upper-left corner and the size
+    Shape(((u32,u32),(u32,u32))),
+    FreeHandDrawing,
+    BaseImage
 }
 
 impl Layer {
@@ -34,5 +36,22 @@ impl Layer {
         let mut image = base.layer.clone();
         overlay(&mut image, &self.layer, 0, 0);
         image
+    }
+
+    pub fn show_shape(&self, base: &Layer) -> DynamicImage {
+        let mut image = base.layer.clone();
+        overlay(&mut image, &self.layer, 0, 0);
+        image
+    }
+
+    pub fn get_pos_size(&self) -> Option<((u32,u32),(u32,u32))> {
+        match self.layer_type {
+            LayerType::Shape((pos,size)) => {
+                Some((pos,size))
+            },
+            LayerType::Text => None,
+            LayerType::FreeHandDrawing => None,
+            LayerType::BaseImage => None
+        }
     }
 }

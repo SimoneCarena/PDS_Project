@@ -7,6 +7,7 @@ pub mod blur_area;
 
 use image::{DynamicImage, RgbaImage};
 use imageproc::point::Point;
+use imageproc::rect::Rect;
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::fs::File;
@@ -31,7 +32,7 @@ pub struct Image {
 }
 
 impl Image {
-    ///Returns an Image structure, wrapped in a Result, given the path where to retrieve it from. 
+    ///Returns an Image structure, wrapped in a Result, given the path where to retrieve it from.
     ///In case of failure an ImageManipulationError is returned, with the IOError variant
     pub fn open(path: &str) -> Result<Self,ImageManipulationError> {
         let image = image::open(path)?;
@@ -62,13 +63,13 @@ impl Image {
         BlurArea::new(image, blur, (x,y), (width,height))
     }
     ///Crops the image given a BlurArea previously obtained via the blur_area method
-    ///Once the crop is done it's not possible to go back and the layers get merged 
+    ///Once the crop is done it's not possible to go back and the layers get merged
     ///together and so also those modifications cannot be undone
     pub fn crop(&mut self, crop_area: BlurArea) {
         let ((x,y), (width, height)) = crop_area.get_crop_data();
         let cropped = crop_area.show().crop(x, y, width, height);
         self.layers.push_front(cropped);
-        
+
     }
     ///Flips the image orizontally
     pub fn flip_horizontally(&mut self) {
@@ -87,7 +88,7 @@ impl Image {
         let rotated = self.layers[0].rotate90();
         self.layers.pop_front();
         self.layers.push_front(rotated);
-        
+
     }
     ///Rotates the image 180 degree clockwise
     pub fn rotate180cv(&mut self) {
@@ -102,32 +103,37 @@ impl Image {
         self.layers.push_front(rotated);
     }
     ///Creates an additional layer containing a filled ellipse with given center, major semiaxis, minor semiaxis and color
-    pub fn draw_filled_ellipse(&mut self, center: (i32, i32), width_radius: i32, height_radius: i32, color: &Color) {
-        let mut layer = self.layers[0].clone();
-        drawing::draw_filled_ellipse_mut(&mut layer, center, width_radius, height_radius, color.color);
-        self.layers.push_front(layer);
+    pub fn draw_filled_ellipse(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
+        let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
+        drawing::draw_filled_ellipse_mut(&mut new_canva, center, size.0/2, size.1/2, color.color);
+        canva.layer = DynamicImage::ImageRgba8(new_canva);
+        canva.layer_type = LayerType::Shape(((center.0 as u32, center.1 as u32),(size.0 as u32, size.1 as u32)));
     }
     ///Creates an additional layer containing an empty ellipse with given center, major semiaxis, minor semiaxis and color
-    pub fn draw_empty_ellipse(&mut self, center: (i32, i32), width_radius: i32, height_radius: i32, color: &Color) {
-        let mut layer = self.layers[0].clone();
-        drawing::draw_hollow_ellipse_mut(&mut layer, center, width_radius, height_radius, color.color);
-        self.layers.push_front(layer);
+    pub fn draw_empty_ellipse(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
+        let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
+        drawing::draw_hollow_ellipse_mut(&mut new_canva, center, size.0/2, size.1/2, color.color);
+        canva.layer = DynamicImage::ImageRgba8(new_canva);
+        canva.layer_type = LayerType::Shape(((center.0 as u32, center.1 as u32),(size.0 as u32, size.1 as u32)));
     }
     ///Creates an additional layer containing a filled rectangle given the upper-left corner, its dimensions and
     ///its color
-    pub fn draw_filled_rectangle(&mut self, corner: (i32, i32), dimensions: (u32, u32), color: &Color) {
-        let mut layer = self.layers[0].clone();
-        let rect = imageproc::rect::Rect::at(corner.0, corner.1).of_size(dimensions.0, dimensions.1);
-        drawing::draw_filled_rect_mut(&mut layer, rect, color.color);
-        self.layers.push_front(layer);
+    pub fn draw_filled_rectangle(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
+        let pos = (center.0-size.0/2, center.1-size.1/2);
+        let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
+        let rect = Rect::at(center.0-size.0/2, center.1-size.1/2).of_size(size.0 as u32, size.1 as u32);
+        drawing::draw_filled_rect_mut(&mut new_canva, rect, color.color);
+        canva.layer = DynamicImage::ImageRgba8(new_canva);
+        canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
     }
     ///Creates an additional layer containing an empty rectangle given the upper-left corner, its dimensions and
     ///its color
-    pub fn draw_empty_rectangle(&mut self, corner: (i32, i32), dimensions: (u32, u32), color: &Color) {
-        let mut layer = self.layers[0].clone();
-        let rect = imageproc::rect::Rect::at(corner.0, corner.1).of_size(dimensions.0, dimensions.1);
-        drawing::draw_hollow_rect_mut(&mut layer, rect, color.color);
-        self.layers.push_front(layer);
+    pub fn draw_empty_rectangle(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
+        let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
+        let rect = Rect::at(center.0-size.0/2, center.1-size.1/2).of_size(size.0 as u32, size.1 as u32);
+        drawing::draw_hollow_rect_mut(&mut new_canva, rect, color.color);
+        canva.layer = DynamicImage::ImageRgba8(new_canva);
+        canva.layer_type = LayerType::Shape(((center.0 as u32, center.1 as u32),(size.0 as u32, size.1 as u32)));
     }
     ///Draws a line given the initial and final point and the color of the line
     pub fn draw_line(&mut self, start: (i32, i32), end: (i32, i32), color: &Color) {
@@ -144,7 +150,7 @@ impl Image {
         self.layers.push_front(layer);
     }
     ///Puts a text in the image given the text to write, its color, the position of the upper-left corner,
-    ///the font and the font size 
+    ///the font and the font size
     pub fn put_text<'a>(&mut self, start: (i32, i32), color: &Color, text: &str, font_size: f32, font: &'a rusttype::Font<'a>) {
         let mut layer = self.layers[0].clone();
         drawing::draw_text_mut(&mut layer, color.color, start.0, start.1, rusttype::Scale::uniform(font_size), font, text);
@@ -190,12 +196,12 @@ impl Image {
                             p4
                         ]
                     );
-    
+
                     let poly = Polygon::from(points);
                     imageproc::drawing::draw_polygon_mut(&mut layer.layer, &poly.vertices, color.color);
 
                     return ((current.0-size/2,current.1),(current.0+size/2,current.1),current);
-                    
+
                 } else if f32::abs(m)<=0.05{
                     let p1 = Point::new(border_l.0, border_l.1);
                     let p2 = Point::new(current.0,current.1-size/2);
@@ -210,7 +216,7 @@ impl Image {
                             p4
                         ]
                     );
-    
+
                     let poly = Polygon::from(points);
                     imageproc::drawing::draw_polygon_mut(&mut layer.layer, &poly.vertices, color.color);
 
@@ -247,7 +253,7 @@ impl Image {
                             p4
                         ]
                     );
-    
+
                     let poly = Polygon::from(points);
                     imageproc::drawing::draw_polygon_mut(&mut layer.layer, &poly.vertices, color.color);
 
@@ -266,7 +272,7 @@ impl Image {
     }
     pub fn rubber_init(&self, last_crop_data: Option<((u32, u32),(u32, u32))>) -> (Layer, Layer) {
         let layer = self.layers[0].clone();
-        let layer = Layer::new(layer,LayerType::FreeHandDrawing);
+        let layer = Layer::new(layer,LayerType::BaseImage);
         let mut base = self.base.clone();
         let base = match last_crop_data {
             Some(last_crop_data) => {
@@ -276,7 +282,7 @@ impl Image {
                 base
             }
         };
-        let base = Layer::new(base,LayerType::Shape);
+        let base = Layer::new(base,LayerType::FreeHandDrawing);
         (base, layer)
     }
     pub fn rubber_set(&mut self, mut layer: Layer, base: &Layer, last: (i32, i32), size: i32) {
@@ -296,7 +302,7 @@ impl Image {
         let width = base.layer.width();
         let height = base.layer.height();
         let canva = RgbaImage::new(width, height);
-        let canva = Layer::new(DynamicImage::ImageRgba8(canva), LayerType::Shape);
+        let canva = Layer::new(DynamicImage::ImageRgba8(canva), LayerType::BaseImage);
         (base, canva)
     }
     pub fn highlight_set(&mut self, mut layer: Layer, base: &Layer, last: (i32, i32), size: i32, color: &Color) {
@@ -330,10 +336,10 @@ impl Image {
         let _file = File::create(&path)?;
         let image  = self.layers[0].clone();
         image.save(path)?;
-        
+
         Ok(())
     }
-    ///Saves the image given the extension and the name one want to give it. The name includes also 
+    ///Saves the image given the extension and the name one want to give it. The name includes also
     ///the path.
     pub fn save_as(&self, location: &str, name: &str, extension: Extensions) -> Result<(), ImageManipulationError> {    let mut n;
         if name.len() == 0{
@@ -382,6 +388,21 @@ impl Image {
         };
         clipboard.set_image(image_cb)?;
         Ok(())
+    }
+
+    pub fn shape_init(&self, center: (u32, u32), size: (u32, u32)) -> (Layer, Layer) {
+        let base = self.layers[0].clone();
+        let width = base.width();
+        let height = base.height();
+        let canva = RgbaImage::new(width,height);
+        let pos = (center.0-size.0/2,center.1-size.1/2);
+
+        (Layer::new(base,LayerType::BaseImage), Layer::new(DynamicImage::ImageRgba8(canva),LayerType::Shape((pos,size))))
+    }
+
+    pub fn shape_set(&mut self, base: Layer, shape_layer: Layer) {
+        let image = shape_layer.show_shape(&base);
+        self.layers.push_front(image);
     }
 
 }
