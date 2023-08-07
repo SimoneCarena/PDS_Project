@@ -49,7 +49,7 @@ impl Layer {
 
         let width = self.layer.width();
         let height = self.layer.height();
-        println!("{:?},{:?}",(size.0,size.1),pos);
+        //println!("{:?},{:?}",(size.0,size.1),pos);
 
         let radius = (u32::min(width,height)/100) as i32;
 

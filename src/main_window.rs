@@ -59,12 +59,20 @@ pub enum DrawStatus{
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Pointing{
+    Up,
+    Down,
+    Left,
+    Right
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Shape{
     FilledRectangle,
     EmptyRectangle,
     FilledCircle,
     EmptyCircle,
-    Arrow
+    Arrow(Pointing)
 }
 
 impl Default for DrawStatus{
@@ -884,7 +892,15 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                     app.rubber = false;
                     if app.draw_layer.is_some() && app.rubber_layer.is_some(){
                         match app.draw_status{
-                            DrawStatus::Shape(1) => app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap()),
+                            DrawStatus::Shape(1) => {
+                                app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                                let di = app.image_to_save.as_ref().unwrap().show();
+                                app.image = Some(ctx.load_texture(
+                                    "my-image",
+                                    get_image_from_memory(di, 0, 0, 1, 1),
+                                    Default::default()
+                                ));
+                            }
                             _ => {}
                         }
                     }
@@ -895,7 +911,15 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                     app.rubber = true;
                     if app.draw_layer.is_some() && app.rubber_layer.is_some(){
                         match app.draw_status{
-                            DrawStatus::Shape(1) => app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap()),
+                            DrawStatus::Shape(1) => {
+                                app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                                let di = app.image_to_save.as_ref().unwrap().show();
+                                app.image = Some(ctx.load_texture(
+                                    "my-image",
+                                    get_image_from_memory(di, 0, 0, 1, 1),
+                                    Default::default()
+                                ));
+                            }
                             _ => {}
                         }
                     }
@@ -909,7 +933,15 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                 app.rubber = false;
                 if app.draw_layer.is_some() && app.rubber_layer.is_some(){
                     match app.draw_status{
-                        DrawStatus::Shape(1) => app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap()),
+                        DrawStatus::Shape(1) => {
+                            app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                            let di = app.image_to_save.as_ref().unwrap().show();
+                            app.image = Some(ctx.load_texture(
+                                "my-image",
+                                get_image_from_memory(di, 0, 0, 1, 1),
+                                Default::default()
+                            ));
+                        }
                         _ => {}
                     }
                 }
@@ -921,16 +953,159 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
 
             ui.add(egui::Slider::new(&mut app.pencil_rubber_thickness, 1..=20).text("Trait size"));
 
-            if ui.button("Shape").clicked(){
+            if ui.button("⬛").on_hover_text("Filled rectangle").clicked(){
                 if app.draw_layer.is_some() && app.rubber_layer.is_some(){
                     match app.draw_status{
-                        DrawStatus::Shape(1) => app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap()),
+                        DrawStatus::Shape(1) => {
+                            app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                            let di = app.image_to_save.as_ref().unwrap().show();
+                            app.image = Some(ctx.load_texture(
+                                "my-image",
+                                get_image_from_memory(di, 0, 0, 1, 1),
+                                Default::default()
+                            ));
+                        }
                         _ => {}
                     }
                 }
                 app.which_shape = Some(Shape::FilledRectangle);
                 app.draw_status = DrawStatus::Shape(0);
             }
+
+            if ui.button("⬜").on_hover_text("Empty rectangle").clicked(){
+                if app.draw_layer.is_some() && app.rubber_layer.is_some(){
+                    match app.draw_status{
+                        DrawStatus::Shape(1) => {
+                            app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                            let di = app.image_to_save.as_ref().unwrap().show();
+                            app.image = Some(ctx.load_texture(
+                                "my-image",
+                                get_image_from_memory(di, 0, 0, 1, 1),
+                                Default::default()
+                            ));
+                        }
+                        _ => {}
+                    }
+                }
+                app.which_shape = Some(Shape::EmptyRectangle);
+                app.draw_status = DrawStatus::Shape(0);
+            }
+
+            if ui.button("δ").on_hover_text("Filled circle").clicked(){
+                if app.draw_layer.is_some() && app.rubber_layer.is_some(){
+                    match app.draw_status{
+                        DrawStatus::Shape(1) => {
+                            app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                            let di = app.image_to_save.as_ref().unwrap().show();
+                            app.image = Some(ctx.load_texture(
+                                "my-image",
+                                get_image_from_memory(di, 0, 0, 1, 1),
+                                Default::default()
+                            ));
+                        }
+                        _ => {}
+                    }
+                }
+                app.which_shape = Some(Shape::FilledCircle);
+                app.draw_status = DrawStatus::Shape(0);
+            }
+
+            if ui.button("○").on_hover_text("Empty circle").clicked(){
+                if app.draw_layer.is_some() && app.rubber_layer.is_some(){
+                    match app.draw_status{
+                        DrawStatus::Shape(1) => {
+                            app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                            let di = app.image_to_save.as_ref().unwrap().show();
+                            app.image = Some(ctx.load_texture(
+                                "my-image",
+                                get_image_from_memory(di, 0, 0, 1, 1),
+                                Default::default()
+                            ));
+                        }
+                        _ => {}
+                    }
+                }
+                app.which_shape = Some(Shape::EmptyCircle);
+                app.draw_status = DrawStatus::Shape(0);
+            }
+
+            if ui.button("⬅").on_hover_text("Left arrow").clicked(){
+                if app.draw_layer.is_some() && app.rubber_layer.is_some(){
+                    match app.draw_status{
+                        DrawStatus::Shape(1) => {
+                            app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                            let di = app.image_to_save.as_ref().unwrap().show();
+                            app.image = Some(ctx.load_texture(
+                                "my-image",
+                                get_image_from_memory(di, 0, 0, 1, 1),
+                                Default::default()
+                            ));
+                        }
+                        _ => {}
+                    }
+                }
+                app.which_shape = Some(Shape::Arrow(Pointing::Left));
+                app.draw_status = DrawStatus::Shape(0);
+            }
+
+            if ui.button("➡").on_hover_text("Right arrow").clicked(){
+                if app.draw_layer.is_some() && app.rubber_layer.is_some(){
+                    match app.draw_status{
+                        DrawStatus::Shape(1) => {
+                            app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                            let di = app.image_to_save.as_ref().unwrap().show();
+                            app.image = Some(ctx.load_texture(
+                                "my-image",
+                                get_image_from_memory(di, 0, 0, 1, 1),
+                                Default::default()
+                            ));
+                        }
+                        _ => {}
+                    }
+                }
+                app.which_shape = Some(Shape::Arrow(Pointing::Right));
+                app.draw_status = DrawStatus::Shape(0);
+            }
+
+            if ui.button("⬆").on_hover_text("Up arrow").clicked(){
+                if app.draw_layer.is_some() && app.rubber_layer.is_some(){
+                    match app.draw_status{
+                        DrawStatus::Shape(1) => {
+                            app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                            let di = app.image_to_save.as_ref().unwrap().show();
+                            app.image = Some(ctx.load_texture(
+                                "my-image",
+                                get_image_from_memory(di, 0, 0, 1, 1),
+                                Default::default()
+                            ));
+                        }
+                        _ => {}
+                    }
+                }
+                app.which_shape = Some(Shape::Arrow(Pointing::Up));
+                app.draw_status = DrawStatus::Shape(0);
+            }
+
+            if ui.button("⬇").on_hover_text("Down arrow").clicked(){
+                if app.draw_layer.is_some() && app.rubber_layer.is_some(){
+                    match app.draw_status{
+                        DrawStatus::Shape(1) => {
+                            app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                            let di = app.image_to_save.as_ref().unwrap().show();
+                            app.image = Some(ctx.load_texture(
+                                "my-image",
+                                get_image_from_memory(di, 0, 0, 1, 1),
+                                Default::default()
+                            ));
+                        }
+                        _ => {}
+                    }
+                }
+                app.which_shape = Some(Shape::Arrow(Pointing::Down));
+                app.draw_status = DrawStatus::Shape(0);
+            }
+
+
 
             if !app.rubber && !app.is_sel_color && ui.add(egui::Button::new("Edit Color")).clicked() {
                 app.is_sel_color = true;
@@ -1050,8 +1225,21 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                                             app.rubber_layer = Some(rl);
                                             app.draw_layer = Some(dl);
 
+                                            match app.which_shape.unwrap(){
+                                                Shape::FilledRectangle => Image::draw_filled_rectangle(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), (300, 200), &app.draw_color),
+                                                Shape::EmptyRectangle => Image::draw_empty_rectangle(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), (300, 200), &app.draw_color, app.pencil_rubber_thickness),
+                                                Shape::FilledCircle => Image::draw_filled_circle(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), 200, &app.draw_color),
+                                                Shape::EmptyCircle => Image::draw_empty_circle(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), 200, &app.draw_color, app.pencil_rubber_thickness),
+                                                Shape::Arrow(dir) => match dir{
+                                                    Pointing::Left => Image::draw_filled_left_arrow(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), (300, 200), &app.draw_color),
+                                                    Pointing::Right => Image::draw_filled_right_arrow(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), (300, 200), &app.draw_color),
+                                                    Pointing::Up => Image::draw_filled_up_arrow(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), (300, 200), &app.draw_color),
+                                                    Pointing::Down => Image::draw_filled_down_arrow(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), (300, 200), &app.draw_color),
+                                                }
+                                            }
+
                                             //Image::draw_filled_rectangle(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), (300, 200), &app.draw_color);
-                                            Image::draw_filled_circle(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), 400, &app.draw_color);
+                                            //Image::draw_filled_circle(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), 400, &app.draw_color);
                                             di = app.draw_layer.as_ref().unwrap().show_shape(app.rubber_layer.as_ref().unwrap());
                                             app.image = Some(
                                                 ctx.load_texture("my-image",
@@ -1147,34 +1335,73 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                                                 let ((x, y), (w, h)) = app.draw_layer.as_ref().unwrap().get_pos_size().unwrap();  //app.bl_ar.as_ref().unwrap().get_crop_data();
                                                 //println!("{:?} {:?}", app.prev_mouse_pos.unwrap(), app.cur_mouse_pos.unwrap());
 
-                                                /*let ((xn, yn), (wn, hn)) = get_new_area(
+                                                let ((xn, yn), (wn, hn)) = get_new_area(
                                                     app.prev_mouse_pos.unwrap(),
                                                     app.cur_mouse_pos.unwrap(),
                                                     (x, y),
                                                     (w, h),
                                                     (app.image_to_save.as_ref().unwrap().width(), app.image_to_save.as_ref().unwrap().height()),
                                                     app.corner.unwrap()
-                                                );*/
+                                                );
 
-                                                let ((xn, yn), (wn, hn)) = get_new_area_circle(
+                                                /*let ((xn, yn), (wn, hn)) = get_new_area_circle(
                                                     app.prev_mouse_pos.unwrap(),
                                                     app.cur_mouse_pos.unwrap(),
                                                     (x, y),
                                                     w,
                                                     (app.image_to_save.as_ref().unwrap().width(), app.image_to_save.as_ref().unwrap().height()),
                                                     app.corner.unwrap()
-                                                );
-
-                                                /*Image::draw_filled_rectangle(app.draw_layer.as_mut().unwrap(),
-                                                                             app.rubber_layer.as_mut().unwrap(),
-                                                                             ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
-                                                                             (wn as i32, hn as i32), &app.draw_color
                                                 );*/
 
-                                                Image::draw_filled_circle(app.draw_layer.as_mut().unwrap(),
+                                                match app.which_shape.unwrap() {
+                                                    Shape::FilledRectangle => Image::draw_filled_rectangle(app.draw_layer.as_mut().unwrap(),
+                                                                                 app.rubber_layer.as_mut().unwrap(),
+                                                                                 ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                                 (wn as i32, hn as i32), &app.draw_color
+                                                    ),
+                                                    Shape::EmptyRectangle => Image::draw_empty_rectangle(app.draw_layer.as_mut().unwrap(),
+                                                                                                          app.rubber_layer.as_mut().unwrap(),
+                                                                                                          ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                                                          (wn as i32, hn as i32), &app.draw_color, app.pencil_rubber_thickness
+                                                    ),
+                                                    Shape::FilledCircle => Image::draw_filled_circle(app.draw_layer.as_mut().unwrap(),
+                                                                                                     app.rubber_layer.as_mut().unwrap(),
+                                                                                                     ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                                                     wn as i32, &app.draw_color
+                                                    ),
+                                                    Shape::EmptyCircle => Image::draw_empty_circle(app.draw_layer.as_mut().unwrap(),
+                                                                           app.rubber_layer.as_mut().unwrap(),
+                                                                           ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                           wn as i32, &app.draw_color, app.pencil_rubber_thickness
+                                                    ),
+                                                    Shape::Arrow(dir) => match dir {
+                                                        Pointing::Left => Image::draw_filled_left_arrow(app.draw_layer.as_mut().unwrap(),
+                                                                                                        app.rubber_layer.as_mut().unwrap(),
+                                                                                                        ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                                                        (wn as i32, hn as i32), &app.draw_color
+                                                        ),
+                                                        Pointing::Right => Image::draw_filled_right_arrow(app.draw_layer.as_mut().unwrap(),
+                                                                                                         app.rubber_layer.as_mut().unwrap(),
+                                                                                                         ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                                                         (wn as i32, hn as i32), &app.draw_color
+                                                        ),
+                                                        Pointing::Up => Image::draw_filled_up_arrow(app.draw_layer.as_mut().unwrap(),
+                                                                                                      app.rubber_layer.as_mut().unwrap(),
+                                                                                                      ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                                                      (wn as i32, hn as i32), &app.draw_color
+                                                        ),
+                                                        Pointing::Down => Image::draw_filled_down_arrow(app.draw_layer.as_mut().unwrap(),
+                                                                                                        app.rubber_layer.as_mut().unwrap(),
+                                                                                                        ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                                                        (wn as i32, hn as i32), &app.draw_color
+                                                        ),
+                                                    }
+                                                }
+
+                                                /*Image::draw_filled_circle(app.draw_layer.as_mut().unwrap(),
                                                                           app.rubber_layer.as_mut().unwrap(),
                                                                           ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
-                                                                          wn as i32, &app.draw_color);
+                                                                          wn as i32, &app.draw_color);*/
 
                                                 let di = app.draw_layer.as_ref().unwrap().show_shape(app.rubber_layer.as_ref().unwrap());    //app.bl_ar.as_ref().unwrap().show();
 
@@ -1333,7 +1560,22 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
         ui.horizontal(|ui| {
             ui.style_mut().visuals.override_text_color = Some(egui::Color32::WHITE);
             if ui.add(egui::Button::new("OK")).clicked() {
-                app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                if app.draw_layer.is_some() && app.rubber_layer.is_some(){
+                    match app.draw_status{
+                        DrawStatus::Shape(_) => {
+                            app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                            let di = app.image_to_save.as_ref().unwrap().show();
+                            app.image = Some(ctx.load_texture(
+                                "my-image",
+                                get_image_from_memory(di, 0, 0, 1, 1),
+                                Default::default()
+                            ));
+                        },
+                        _ => {}
+                    }
+                }
+
+                //app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
                 app.prev = app.status;
                 app.status = Image;
                 app.draw_status = DrawStatus::Shape(0);

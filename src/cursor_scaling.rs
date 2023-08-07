@@ -89,40 +89,63 @@ pub fn get_new_area_circle(start: (u32, u32), end: (u32, u32), old_pos: (u32, u3
     let mut new_diameter: i32;
     let limits = (image_size.0 as i32, image_size.1 as i32);
 
-    let d = if i32::abs(distance.0)>=i32::abs(distance.1) {
-        distance.0
-    } else {
-        distance.1
-    };
+    let d = i32::max(i32::abs(distance.0),i32::abs(distance.1));
 
     match corner {
         Corner::DownLeft => {
             if old_diameter-distance.0<=0 || old_diameter+distance.1<=0{
                 return ((old_pos.0 as u32, old_pos.1 as u32),(old_diameter as u32, old_diameter as u32));
             }
-            new_diameter = old_diameter + d;
-            new_pos = (old_pos.0+d,old_pos.1+d);
+            if end.0<start.0 && end.1>=start.1 {
+                new_diameter = old_diameter + d;
+                new_pos = (old_pos.0-d,old_pos.1);
+            } else if end.0>=start.0 && end.1<start.1{
+                new_diameter = old_diameter - d;
+                new_pos = (old_pos.0+d,old_pos.1);
+            } else {
+                return ((old_pos.0 as u32, old_pos.1 as u32),(old_diameter as u32, old_diameter as u32));
+            } 
         },
         Corner::DownRight => {
             if old_diameter+distance.0<=0 || old_diameter+distance.1<=0{
                 return ((old_pos.0 as u32, old_pos.1 as u32),(old_diameter as u32, old_diameter as u32));
             }
-            new_diameter = old_diameter + d;
-            new_pos = (old_pos.0+d,old_pos.1+d);
+            if end.0<start.0 && end.1<start.1{
+                new_diameter = old_diameter - d;
+            } else if end.0>=start.0 && end.1>=start.1{
+                new_diameter = old_diameter + d;
+            } else {
+                return ((old_pos.0 as u32, old_pos.1 as u32),(old_diameter as u32, old_diameter as u32));
+            }
+            new_pos = (old_pos.0,old_pos.1);
         },
         Corner::UpLeft => {
             if old_diameter-distance.0<=0 || old_diameter-distance.1<=0 {
                 return ((old_pos.0 as u32, old_pos.1 as u32),(old_diameter as u32, old_diameter as u32));
             }
-            new_diameter = old_diameter + d;
-            new_pos = (old_pos.0+d,old_pos.1+d);
+            if end.0<start.0 && end.1<start.1{
+                new_diameter = old_diameter + d;
+                new_pos = (old_pos.0-d,old_pos.1-d);
+            } else if end.0>=start.0 && end.1>=start.1{
+                new_diameter = old_diameter - d;
+                new_pos = (old_pos.0+d,old_pos.1+d);
+            } else {
+                return ((old_pos.0 as u32, old_pos.1 as u32),(old_diameter as u32, old_diameter as u32));
+            }
         },
         Corner::UpRight => {
             if old_diameter+distance.0<=0 || old_diameter-distance.1<=0 {
                 return ((old_pos.0 as u32, old_pos.1 as u32),(old_diameter as u32, old_diameter as u32));
             }
-            new_diameter = old_diameter + d;
-            new_pos = (old_pos.0+d,old_pos.1+d);
+            if end.0<start.0 && end.1>=start.1 {
+                new_diameter = old_diameter - d;
+                new_pos = (old_pos.0,old_pos.1+d);
+            } else if end.0>=start.0 && end.1<start.1{
+                new_diameter = old_diameter + d;
+                new_pos = (old_pos.0,old_pos.1-d);
+            } else {
+                return ((old_pos.0 as u32, old_pos.1 as u32),(old_diameter as u32, old_diameter as u32));
+            }
         }
     }
 

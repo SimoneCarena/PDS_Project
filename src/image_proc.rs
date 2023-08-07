@@ -104,7 +104,7 @@ impl Image {
         let pos = (center.0-diameter/2, center.1-diameter/2);
         //println!("{:?}",(base.layer.width() as u32, base.layer.height() as u32));
         let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
-        drawing::draw_filled_circle_mut(&mut new_canva, center, diameter, color.color);
+        drawing::draw_filled_circle_mut(&mut new_canva, center, diameter/2, color.color);
         canva.layer = DynamicImage::ImageRgba8(new_canva);
         canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(diameter as u32, diameter as u32)));
     }
@@ -121,7 +121,7 @@ impl Image {
             pos.0 += 1;
             pos.1 += 1;
             diameter-=2;
-            drawing::draw_hollow_circle_mut(&mut new_canva, center, diameter/2, Color::new(0,255,0,1.0).color);
+            drawing::draw_hollow_circle_mut(&mut new_canva, center, diameter/2, color.color);
         }
         canva.layer = DynamicImage::ImageRgba8(new_canva);
         canva.layer_type = LayerType::Shape(((pos_2.0, pos_2.1),(size_2.0, size_2.1)));
@@ -153,12 +153,12 @@ impl Image {
             size.0-=2;
             size.1-=2;
             let rect = Rect::at(pos.0, pos.1).of_size(size.0 as u32, size.1 as u32);
-            drawing::draw_hollow_rect_mut(&mut new_canva, rect, Color::new(0,255,0,1.0).color);
+            drawing::draw_hollow_rect_mut(&mut new_canva, rect, color.color);
         }
         canva.layer = DynamicImage::ImageRgba8(new_canva);
         canva.layer_type = LayerType::Shape(((pos_2.0, pos_2.1),(size_2.0, size_2.1)));
     }
-    pub fn draw_filled_up_arrow(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut size: (i32, i32), color: &Color) {
+    pub fn draw_filled_up_arrow(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
         let pos = (center.0-size.0/2, center.1-size.1/2);
         let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
         let arrow = Arrow::up_from_size(center, size);
@@ -167,7 +167,7 @@ impl Image {
         canva.layer = DynamicImage::ImageRgba8(new_canva);
         canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
     }
-    pub fn draw_filled_right_arrow(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut size: (i32, i32), color: &Color) {
+    pub fn draw_filled_right_arrow(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
         let pos = (center.0-size.0/2, center.1-size.1/2);
         let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
         let arrow = Arrow::right_from_size(center, size);
