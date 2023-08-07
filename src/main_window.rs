@@ -969,7 +969,7 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
 
     egui::CentralPanel::default().show(ctx, |ui| {
         egui::ScrollArea::vertical()
-            .scroll_bar_visibility(ScrollBarVisibility::VisibleWhenNeeded)
+            .scroll_bar_visibility(ScrollBarVisibility::AlwaysVisible)
             .drag_to_scroll(false)
             .auto_shrink([true; 2])
             .show(ui, |ui| {
