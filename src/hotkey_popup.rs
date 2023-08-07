@@ -12,6 +12,13 @@ use keyboard_types::{Code, Modifiers};
 use crate::main_window::MyApp;
 
 #[derive(Clone, Hash)]
+pub enum OpName{
+    New,
+    Save,
+    Delay
+}
+
+#[derive(Clone, Hash)]
 pub struct Operation{
     id: HotKey,
     name: String,
@@ -50,35 +57,6 @@ impl Operation{
         (hotkey.id(), hotkey_str.clone(), hotkey)
     }
 
-    pub fn parse(str: String) -> Result<Operation, String>{
-
-        if !str.contains("Key"){
-            return Err("Non valid string".to_string());
-        }
-
-        let mut alt=false;
-        let mut shift=false;
-        let mut ctrl=false;
-
-        if str.contains("alt"){
-            alt = true;
-        }
-        if str.contains("shift"){
-            shift = true;
-        }
-        if str.contains("ctrl"){
-            ctrl = true;
-        }
-
-        let hk: HotKey = str.parse().unwrap();
-
-        let key = str.split("+").last().unwrap().to_string();
-        let code = string_to_code(&key);
-
-        let op = Operation::new(hk, "".to_string(), alt, shift, ctrl, code);
-        Ok(op)
-    }
-
     pub fn get_mut_alt(&mut self) -> &mut bool{
         &mut self.alt
     }
@@ -108,6 +86,7 @@ impl Operation{
     }
 
     pub fn get_immut_hotkey(&self) -> HotKey {self.id.clone()}
+
 }
 
 impl PartialEq<Self> for Operation {
@@ -216,4 +195,44 @@ pub fn string_to_code(s: &str) -> Code{
         _ => {}
     }
     ris
+}
+
+pub fn parse(str: String, i: usize) -> Result<Operation, String>{
+
+    if !str.contains("Key"){
+        return Err("Non valid string".to_string());
+    }
+
+    let mut alt=false;
+    let mut shift=false;
+    let mut ctrl=false;
+
+    if str.contains("alt"){
+        alt = true;
+    }
+    if str.contains("shift"){
+        shift = true;
+    }
+    if str.contains("ctrl"){
+        ctrl = true;
+    }
+
+    let hk: HotKey = str.parse().unwrap();
+
+    let key = str.split("+").last().unwrap().to_string();
+    let code = string_to_code(&key);
+
+    let name = match i{
+        0 => "New capture",
+        1 => "Delay capture",
+        2 => "Crop capture",
+        3 => "Draw capture",
+        4 => "Text capture",
+        5 => "Copy to clipboard",
+        6 => "Save capture",
+        _ => "",
+    };
+
+    let op = Operation::new(hk, name.to_string(), alt, shift, ctrl, code);
+    Ok(op)
 }
