@@ -69,7 +69,7 @@ impl Image {
     ///together and so also those modifications cannot be undone
     pub fn crop(&mut self, crop_area: BlurArea) {
         let ((x,y), (width, height)) = crop_area.get_crop_data();
-        let cropped = crop_area.show().crop(x, y, width, height);
+        let cropped = crop_area.save().crop(x, y, width, height);
         self.layers.push_front(cropped);
         
     }
