@@ -1101,7 +1101,7 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                         app.draw_status = DrawStatus::Shape(0);
                     }
 
-                    if ui.button("δ").on_hover_text("Filled circle").clicked() {
+                    if ui.button("⚫").on_hover_text("Filled circle").clicked() {
                         if app.draw_layer.is_some() && app.rubber_layer.is_some() {
                             match app.draw_status {
                                 DrawStatus::Shape(1) => {
@@ -1471,15 +1471,28 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
                                                 Some(p) => {
                                                     let ((x, y), (w, h)) = app.draw_layer.as_ref().unwrap().get_pos_size().unwrap();  //app.bl_ar.as_ref().unwrap().get_crop_data();
                                                     //println!("{:?} {:?}", app.prev_mouse_pos.unwrap(), app.cur_mouse_pos.unwrap());
-
-                                                    let ((xn, yn), (wn, hn)) = get_new_area(
-                                                        app.prev_mouse_pos.unwrap(),
-                                                        app.cur_mouse_pos.unwrap(),
-                                                        (x, y),
-                                                        (w, h),
-                                                        (app.image_to_save.as_ref().unwrap().width(), app.image_to_save.as_ref().unwrap().height()),
-                                                        app.corner.unwrap()
-                                                    );
+                                                    let ((xn, yn), (wn, hn)) = match app.which_shape.as_ref().unwrap() {
+                                                        Shape::FilledCircle | Shape::EmptyCircle => {
+                                                            get_new_area_circle(
+                                                                app.prev_mouse_pos.unwrap(),
+                                                                app.cur_mouse_pos.unwrap(), 
+                                                                (x, y), 
+                                                                w, 
+                                                                (app.image_to_save.as_ref().unwrap().width(), app.image_to_save.as_ref().unwrap().height()), 
+                                                                app.corner.unwrap()
+                                                            )
+                                                        },
+                                                        _ => {
+                                                            get_new_area(
+                                                                app.prev_mouse_pos.unwrap(),
+                                                                app.cur_mouse_pos.unwrap(),
+                                                                (x, y),
+                                                                (w, h),
+                                                                (app.image_to_save.as_ref().unwrap().width(), app.image_to_save.as_ref().unwrap().height()),
+                                                                app.corner.unwrap()
+                                                            )
+                                                        }
+                                                    };
 
                                                     /*let ((xn, yn), (wn, hn)) = get_new_area_circle(
                                                     app.prev_mouse_pos.unwrap(),

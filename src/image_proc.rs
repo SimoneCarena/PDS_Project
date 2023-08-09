@@ -323,7 +323,7 @@ impl Image {
                 let border_l = (current.0-size/2, current.1);
                 let border_r = (current.0+size/2, current.1);
 
-                imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, current, size/2, color.color);
+                //imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, current, size/2, color.color);
 
                 return (border_l, border_r, current);
             }
@@ -346,7 +346,7 @@ impl Image {
     }
     pub fn rubber_set(&mut self, mut layer: Layer, base: &Layer, last: (i32, i32), size: i32) {
         let color = Color::new(0, 0, 0, 0.0);
-        imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, last, size/2, color.color);
+        //imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, last, size/2, color.color);
         let layer = layer.show_rubber(base);
         self.layers.push_front(layer);
     }
@@ -365,7 +365,7 @@ impl Image {
         (base, canva)
     }
     pub fn highlight_set(&mut self, mut layer: Layer, base: &Layer, last: (i32, i32), size: i32, color: &Color) {
-        imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, last, size/2, color.color);
+        //imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, last, size/2, color.color);
         let layer = layer.show_higlight(base);
         self.layers.push_front(layer);
     }
