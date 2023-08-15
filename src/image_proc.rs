@@ -7,6 +7,7 @@ pub mod blur_area;
 mod shape;
 
 use image::{DynamicImage, RgbaImage};
+use imageproc::pixelops::interpolate;
 use imageproc::point::Point;
 use imageproc::rect::Rect;
 use std::collections::VecDeque;
@@ -225,107 +226,152 @@ impl Image {
     ///Finalizes the free-hand drawing layer and puts it with the others. Takes as parameter the previously
     ///defines Layer used for drawing
     pub fn free_hand_draw_set(&mut self, mut layer: Layer, last: (i32, i32), size: i32, color: &Color ) {
-        imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, last, size/2, color.color);
         self.layers.push_front(layer.layer);
     }
     ///Draws a point on a previously deifned Layer (returned by free_hand_draw_init) given the point position
     ///and its color. Takes a mutable reference to such Layer
-    pub fn draw_point(layer: &mut Layer, prev: Option<((i32, i32), (i32, i32), (i32, i32))>, current: (i32, i32), size: i32, color: &Color) -> ((i32, i32), (i32, i32), (i32, i32)) {
+    pub fn draw_point(layer: &mut Layer, prev: Option<((i32, i32), (i32, i32), (i32, i32))>, current: (i32, i32), mut size: i32, color: &Color) -> ((i32, i32), (i32, i32), (i32, i32)) {
+        
+        let c1 = current;
+        if size%2==0{
+            size = size + 1;
+        }
+
         match prev {
-            Some((border_l, border_r, center)) => {
+            Some((_, _, c0)) => {
 
-                let x0 = center.0 as f32;
-                let y0 = center.1 as f32;
-                let x1 = current.0 as f32;
-                let y1 = current.1 as f32;
+                let d = (c1.0-c0.0, c1.1-c0.1);
 
-                let m = (y1-y0)/(x1-x0);
+                let xc0 = c0.0 as f32;
+                let yc0 = c0.1 as f32;
+                let xc1 = c1.0 as f32;
+                let yc1 = c1.1 as f32;
 
-                if  m.is_nan() || m.is_infinite() || f32::abs(m)>= 5.0 {
-                    let p1 = Point::new(border_l.0, border_l.1);
-                    let p2 = Point::new(current.0-size/2,current.1);
-                    let p3 = Point::new(current.0+size/2,current.1);
-                    let p4 = Point::new(border_r.0,border_r.1);
-
-                    let points = Vec::from(
-                        [
-                            p1,
-                            p2,
-                            p3,
-                            p4
-                        ]
+                if size == 1 {
+                    drawing::draw_antialiased_line_segment_mut(
+                        &mut layer.layer, 
+                        c0, 
+                        c1, 
+                        color.color, 
+                        |a,b,c| {
+                            interpolate(a, b, c)
+                        }
                     );
-    
-                    let poly = Polygon::from(points);
-                    imageproc::drawing::draw_polygon_mut(&mut layer.layer, &poly.vertices, color.color);
+                    return (c1,c1,c1);
+                }
 
-                    return ((current.0-size/2,current.1),(current.0+size/2,current.1),current);
+                let m1 = (yc1-yc0)/(xc1-xc0);
+
+                if m1.is_nan() || m1.is_infinite() {
                     
-                } else if f32::abs(m)<=0.05{
-                    let p1 = Point::new(border_l.0, border_l.1);
-                    let p2 = Point::new(current.0,current.1-size/2);
-                    let p3 = Point::new(current.0,current.1+size/2);
-                    let p4 = Point::new(border_r.0,border_r.1);
+                    let l1 = (c1.0 - size/2, c1.1);
+                    let r1 = (c1.0 + size/2, c1.1);
+                    let l0 = (l1.0-d.0, l1.1-d.1);
+                    let r0 = (r1.0-d.0, r1.1-d.1);
 
                     let points = Vec::from(
                         [
-                            p1,
-                            p2,
-                            p3,
-                            p4
+                            Point::new(l0.0, l0.1),
+                            Point::new(l1.0, l1.1),
+                            Point::new(r1.0, r1.1),
+                            Point::new(r0.0, r0.1)
                         ]
                     );
-    
-                    let poly = Polygon::from(points);
-                    imageproc::drawing::draw_polygon_mut(&mut layer.layer, &poly.vertices, color.color);
 
-                    return ((current.0,current.1-size/2),(current.0,current.1+size/2),current);
+                    drawing::draw_polygon_mut(&mut layer.layer, &points, color.color);
+                    drawing::draw_filled_circle_mut(&mut layer.layer, c1, size/2, color.color);
+
+                    return (l1,r1,c1);
+
+                } else if m1==0.0 {
+                    
+                    let l1 = (c1.0, c1.1 - size/2);
+                    let r1 = (c1.0, c1.1 + size/2);
+                    let l0 = (l1.0-d.0, l1.1-d.1);
+                    let r0 = (r1.0-d.0, r1.1-d.1);
+
+                    let points = Vec::from(
+                        [
+                            Point::new(l0.0, l0.1),
+                            Point::new(l1.0, l1.1),
+                            Point::new(r1.0, r1.1),
+                            Point::new(r0.0, r0.1)
+                        ]
+                    );
+
+                    drawing::draw_polygon_mut(&mut layer.layer, &points, color.color);
+                    drawing::draw_filled_circle_mut(&mut layer.layer, c1, size/2, color.color);
+
+                    return (l1,r1,c1);
+
                 } else {
 
-                    let xl1 = border_l.0;
-                    let xr1 = border_r.0;
-                    let yl1 = border_l.1;
-                    let yr1 = border_r.1;
+                    let size = size as f32;
 
-                    let distance = (current.0 - center.0, current.1-center.1);
+                    let m2 = -1.0/m1;
+                    let q2 = yc1-m2*xc1;
+                    let r = size/2.0;
 
-                    let xl2 = xl1 + distance.0;
-                    let xr2 = xr1 + distance.0;
-                    let yl2 = yl1 + distance.1;
-                    let yr2 = yr1 + distance.1;
+                    let m22 = f32::powi(m2,2);
+                    let r2 = f32::powi(r as f32,2);
+                    let xc12 = f32::powi(xc1,2);
+                    let yc12 = f32::powi(yc1,2);
+                    let q22 = f32::powi(q2, 2);
 
-                    let p1: Point<i32>;
-                    let p2: Point<i32>;
-                    let p3: Point<i32>;
-                    let p4: Point<i32>;
+                    let xl1 = -(q2 - (q2 + m2*xc1 + m2*f32::sqrt(m22*r2 - m22*xc12 - 2.0*m2*q2*xc1 + 2.0*m2*xc1*yc1 - q22 + 2.0*q2*yc1 + r2 - yc12) + m22*yc1)/(m22 + 1.0))/m2;
+                    let yl1 = (q2 + m2*xc1 + m2*f32::sqrt(m22*r2 - m22*xc12 - 2.0*m2*q2*xc1 + 2.0*m2*xc1*yc1 - q22 + 2.0*q2*yc1 + r2 - yc12) + m22*yc1)/(m22 + 1.0);
+                    let xr1 = -(q2 - (q2 + m2*xc1 - m2*f32::sqrt(m22*r2 - m22*xc12 - 2.0*m2*q2*xc1 + 2.0*m2*xc1*yc1 - q22 + 2.0*q2*yc1 + r2 - yc12) + m22*yc1)/(m22 + 1.0))/m2;
+                    let yr1 = (q2 + m2*xc1 - m2*f32::sqrt(m22*r2 - m22*xc12 - 2.0*m2*q2*xc1 + 2.0*m2*xc1*yc1 - q22 + 2.0*q2*yc1 + r2 - yc12) + m22*yc1)/(m22 + 1.0);
 
-                    p1 = Point::new(xl1 as i32,yl1 as i32);
-                    p2 = Point::new(xl2 as i32,yl2 as i32);
-                    p3 = Point::new(xr2 as i32,yr2 as i32);
-                    p4 = Point::new(xr1 as i32,yr1 as i32);
+                    let l1 = (xl1 as i32, yl1 as i32);
+                    let r1 = (xr1 as i32, yr1 as i32);
+                    let l0 = (l1.0-d.0, l1.1-d.1);
+                    let r0 = (r1.0-d.0, r1.1-d.1);
+
+                    //let dist = f32::sqrt(f32::powi((l1.0-r1.0) as f32, 2)+f32::powi((l1.1-r1.1) as f32,2));
+                    //println!("{}",dist);
 
                     let points = Vec::from(
                         [
-                            p1,
-                            p2,
-                            p3,
-                            p4
+                            Point::new(l0.0, l0.1),
+                            Point::new(l1.0, l1.1),
+                            Point::new(r1.0, r1.1),
+                            Point::new(r0.0, r0.1)
                         ]
                     );
-    
-                    let poly = Polygon::from(points);
-                    imageproc::drawing::draw_polygon_mut(&mut layer.layer, &poly.vertices, color.color);
 
-                    return ((xl2, yl2),(xr2, yr2),current);
+                    drawing::draw_polygon_mut(&mut layer.layer, &points, color.color);
+                    drawing::draw_antialiased_line_segment_mut(
+                        &mut layer.layer, 
+                        l0, 
+                        l1, 
+                        color.color, 
+                        |a,b,c| {
+                            interpolate(a, b, c)
+                        }
+                    );
+                    drawing::draw_antialiased_line_segment_mut(
+                        &mut layer.layer, 
+                        r0, 
+                        r1, 
+                        color.color, 
+                        |a,b,c| {
+                            interpolate(a, b, c)
+                        }
+                    );
+                    drawing::draw_filled_circle_mut(&mut layer.layer, c1, (size as i32)/2, color.color);
+
+                    return (l1,r1,c1);
+
                 }
             },
             None => {
-                let border_l = (current.0-size/2, current.1);
-                let border_r = (current.0+size/2, current.1);
+                let l0 = (current.0-size/2, current.1);
+                let r0 = (current.0+size/2, current.1);
 
-                //imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, current, size/2, color.color);
+                imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, current, size/2, color.color);
 
-                return (border_l, border_r, current);
+                return (l0, r0, current);
             }
         }
     }
