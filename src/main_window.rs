@@ -29,6 +29,21 @@ use crate::image_proc::extensions::Extensions;
 use crate::image_proc::image_errors::ImageManipulationError;
 use crate::image_proc::layer::Layer;
 use crate::load_fonts::{load_fonts, load_fonts_fallback};
+use crate::main_window::crop_win::crop_window;
+use crate::main_window::draw_win::draw_window;
+use crate::main_window::hidden_win::hidden_window;
+use crate::main_window::image_win::image_window;
+use crate::main_window::initial_win::initial_window;
+use crate::main_window::settings_win::settings_window;
+use crate::main_window::text_win::text_window;
+
+pub mod crop_win;
+pub mod draw_win;
+pub mod text_win;
+pub mod initial_win;
+pub mod settings_win;
+pub mod image_win;
+mod hidden_win;
 
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -289,6 +304,10 @@ impl MyApp {
             }
         });
 
+        if !ret.fonts.as_ref().unwrap().contains_key(ret.sel_font.as_ref().unwrap()){
+            ret.sel_font = Some(ret.fonts.as_ref().unwrap().iter().nth(0).unwrap().0.clone());
+        }
+
         ret
     }
 }
@@ -455,7 +474,7 @@ impl eframe::App for MyApp {
     }
 }
 
-fn initial_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
+/*fn initial_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.horizontal(|ui| {
             ui.style_mut().visuals.override_text_color = Some(egui::Color32::WHITE);
@@ -497,9 +516,8 @@ fn initial_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fram
             ui.add(egui::TextEdit::singleline(&mut "Press Take to capture a new screenshot"));
         });
     });
-}
-
-fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
+}*/
+/*fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.horizontal(|ui| {
             ui.style_mut().visuals.override_text_color = Some(egui::Color32::WHITE);
@@ -626,8 +644,8 @@ fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame)
 
     });
 }
-
-fn hidden_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
+*/
+/*fn hidden_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
     let mut enabled;
     if !app.instant_flag{
         enabled = ctx.input(|i| i.time) - app.disabled_time > app.delay_secs as f64;
@@ -653,8 +671,8 @@ fn hidden_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame
         app.status = Image;
     }
 }
-
-fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
+*/
+/*fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
     //pulsanti
     egui::CentralPanel::default().show(ctx, |ui| {
         let window_size = Vec2::new(ctx.screen_rect().width()-5.0, ctx.screen_rect().height()-60.0);
@@ -808,8 +826,8 @@ fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
     });
 
 }
-
-fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
+*/
+/*fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
     egui::CentralPanel::default().show(ctx, |ui| {
         egui::ScrollArea::vertical()
             .scroll_bar_visibility(ScrollBarVisibility::AlwaysVisible)
@@ -963,8 +981,8 @@ fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
             });
     });
 }
-
-fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
+*/
+/*fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
 
     egui::CentralPanel::default().show(ctx, |ui| {
         egui::ScrollArea::vertical()
@@ -1624,8 +1642,8 @@ fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
     });
 
 }
-
-fn settings_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
+*/
+/*fn settings_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
     egui::CentralPanel::default().show(ctx, |ui| {
         egui::ScrollArea::vertical()
             .scroll_bar_visibility(ScrollBarVisibility::VisibleWhenNeeded)
@@ -1773,7 +1791,7 @@ fn settings_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
 
     });
 }
-
+*/
 fn take_capture(screen: &Screen) -> Option<Image> {
     match screen.capture(){
         Ok(sh) => {

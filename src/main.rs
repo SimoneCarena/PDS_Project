@@ -8,6 +8,7 @@ mod cursor_scaling;
 mod load_fonts;
 mod load_assets;
 
+
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Display, Formatter};
 use std::fs;
