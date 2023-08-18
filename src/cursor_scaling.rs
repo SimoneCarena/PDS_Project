@@ -3,7 +3,8 @@ pub enum Corner {
     UpLeft,
     UpRight,
     DownLeft,
-    DownRight
+    DownRight,
+    Centre
 }
 
 pub fn cursor_position(relative_reference: (u32, u32), scale: f32) -> (u32, u32) {
@@ -22,8 +23,8 @@ pub fn get_new_area(start: (u32, u32), end: (u32, u32), old_pos: (u32, u32), old
     let old_pos = (old_pos.0 as i32, old_pos.1 as i32);
     let old_size = (old_size.0 as i32, old_size.1 as i32);
     let distance = (end.0-start.0, end.1-start.1);
-    let mut new_pos: (i32,i32);
-    let mut new_size: (i32,i32);
+    let mut new_pos: (i32,i32) = (0, 0);
+    let mut new_size: (i32,i32) = (0, 0);
     let limits = (image_size.0 as i32, image_size.1 as i32);
 
     match corner {
@@ -55,6 +56,14 @@ pub fn get_new_area(start: (u32, u32), end: (u32, u32), old_pos: (u32, u32), old
             new_size = (old_size.0+distance.0,old_size.1-distance.1);
             new_pos = (old_pos.0,old_pos.1+distance.1);
         }
+        _ => {
+             return move_area(
+                (start.0 as u32, start.1 as u32),
+                (end.0 as u32, end.1 as u32),
+                (old_pos.0 as u32, old_pos.1 as u32),
+                (old_size.0 as u32, old_size.1 as u32),
+                image_size);
+        }
     }
 
     if new_pos.0<0 {
@@ -85,8 +94,8 @@ pub fn get_new_area_circle(start: (u32, u32), end: (u32, u32), old_pos: (u32, u3
     let old_pos = (old_pos.0 as i32, old_pos.1 as i32);
     let old_diameter = old_diameter as i32;
     let distance = (end.0-start.0, end.1-start.1);
-    let mut new_pos: (i32,i32);
-    let mut new_diameter: i32;
+    let mut new_pos: (i32,i32) = (0, 0);
+    let mut new_diameter: i32 = 0;
     let limits = (image_size.0 as i32, image_size.1 as i32);
 
     let d = i32::max(i32::abs(distance.0),i32::abs(distance.1));
@@ -147,6 +156,14 @@ pub fn get_new_area_circle(start: (u32, u32), end: (u32, u32), old_pos: (u32, u3
                 return ((old_pos.0 as u32, old_pos.1 as u32),(old_diameter as u32, old_diameter as u32));
             }
         }
+        _ => {
+            return move_area(
+                (start.0 as u32, start.1 as u32),
+                (end.0 as u32, end.1 as u32),
+                (old_pos.0 as u32, old_pos.1 as u32),
+                (old_diameter as u32, old_diameter as u32),
+                image_size);
+        }
     }
 
     if new_pos.0<0 {
@@ -170,11 +187,11 @@ pub fn get_new_area_circle(start: (u32, u32), end: (u32, u32), old_pos: (u32, u3
 
 }
 
-pub fn move_area(start: (u32, u32), end: (u32, u32), pos: (u32, u32), size: (u32, u32), image_size: (u32, u32)) -> ((u32,u32),(u32,u32)) {
+pub fn move_area(start: (u32, u32), end: (u32, u32), old_pos: (u32, u32), old_size: (u32, u32), image_size: (u32, u32)) -> ((u32, u32), (u32, u32)) {
     let start = (start.0 as i32, start.1 as i32);
     let end = (end.0 as i32, end.1 as i32);
-    let pos = (pos.0 as i32, pos.1 as i32);
-    let size = (size.0 as i32, size.1 as i32);
+    let pos = (old_pos.0 as i32, old_pos.1 as i32);
+    let size = (old_size.0 as i32, old_size.1 as i32);
     let distance = (end.0-start.0, end.1-start.1);
 
     let mut new_pos = (pos.0+distance.0, pos.1+distance.1);

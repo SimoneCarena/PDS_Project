@@ -468,6 +468,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                         //println!("{:?} {}", pos, offset);
                                         //println!("{:?} {:?} {:?} {:?}", c1, c2, c3, c4);
 
+                                        //alto sx
                                         if (pos.x - offset > c1.0 -10.0 && pos.x - offset < c1.0 + 10.0) && (pos.y+app.scroll_qty - 50.0 > c1.1-10.0 && pos.y+app.scroll_qty - 50.0 < c1.1 + 10.0) {
                                             //println!("Angolo!!");
                                             if ctx.input(|i| i.pointer.any_pressed()) {
@@ -501,6 +502,15 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                                 app.corner = Some(Corner::DownRight);
                                                 app.any_pressed = true;
                                                 //println!("pressed");
+                                            }
+                                        }
+                                        //centro
+                                        else if ((pos.x - offset > c1.0 + 10.0) && (pos.x - offset < c4.0 - 10.0)) && ((pos.y+app.scroll_qty - 50.0 > c1.1 +10.0) && (pos.y+app.scroll_qty - 50.0 < c4.1 - 10.0)) {
+                                            println!("Interno!!");
+                                            if ctx.input(|i| i.pointer.any_pressed()) {
+                                                app.corner = Some(Corner::Centre);
+                                                app.any_pressed = true;
+                                                println!("pressed");
                                             }
                                         }
 
@@ -543,6 +553,8 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                                             )
                                                         }
                                                     };
+
+                                                    println!("{:?}", (wn,hn));
 
                                                     /*let ((xn, yn), (wn, hn)) = get_new_area_circle(
                                                     app.prev_mouse_pos.unwrap(),
@@ -614,7 +626,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                             }
 
                                             match app.corner.unwrap() {
-                                                Corner::UpLeft | Corner::UpRight | Corner::DownLeft => {
+                                                Corner::UpLeft | Corner::UpRight | Corner::DownLeft | Corner::Centre => {
                                                     let (x, y) = cursor_position(((pos.x - offset) as u32, (pos.y+app.scroll_qty-50.0) as u32), 1.0 / app.window_image_ratio);
                                                     app.anchor_corner = Some(((x as f32, y as f32), app.window_image_ratio));
                                                 }
