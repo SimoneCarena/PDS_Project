@@ -341,7 +341,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                     if app.any_pressed {
                                         match app.draw_status {
                                             DrawStatus::Draw => {
-                                                app.prev_edge = Some(Image::draw_point(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), app.pencil_rubber_thickness, &app.draw_color));
+                                                app.prev_edge = Some(Image::draw_point(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), (app.pencil_rubber_thickness as f32 * 1.5) as i32, &app.draw_color));
                                                 di = app.draw_layer.as_ref().unwrap().show();
                                                 app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
                                             },
@@ -351,7 +351,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                                 app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
                                             },
                                             DrawStatus::Highlight => {
-                                                app.prev_edge = Some(Image::highlight(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), app.highlight_thickness, &image_proc::colors::Color::new(app.draw_color.color[0], app.draw_color.color[1], app.draw_color.color[2], 0.3)));
+                                                app.prev_edge = Some(Image::highlight(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), (app.highlight_thickness as f32 * 1.5) as i32, &image_proc::colors::Color::new(app.draw_color.color[0], app.draw_color.color[1], app.draw_color.color[2], 0.3)));
                                                 di = app.draw_layer.as_ref().unwrap().show_higlight(app.rubber_layer.as_ref().unwrap());
                                                 app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
                                             },
@@ -363,7 +363,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                         app.any_pressed = false;
                                         match app.draw_status {
                                             DrawStatus::Draw => {
-                                                app.image_to_save.as_mut().unwrap().free_hand_draw_set(app.draw_layer.take().unwrap(), app.prev_edge.unwrap().clone().2, app.pencil_rubber_thickness, &app.draw_color);
+                                                app.image_to_save.as_mut().unwrap().free_hand_draw_set(app.draw_layer.take().unwrap(), app.prev_edge.unwrap().clone().2, (app.pencil_rubber_thickness as f32 *1.5) as i32, &app.draw_color);
                                                 app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
                                             },
                                             DrawStatus::Rubber => {
@@ -373,7 +373,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                                 app.draw_layer = Some(dl);
                                             },
                                             DrawStatus::Highlight => {
-                                                app.image_to_save.as_mut().unwrap().highlight_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, app.highlight_thickness, &app.highlight_color);
+                                                app.image_to_save.as_mut().unwrap().highlight_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, (app.highlight_thickness as f32 * 1.5) as i32, &app.highlight_color);
                                                 let (rl, dl) = app.image_to_save.as_ref().unwrap().highlight_init();
                                                 app.rubber_layer = Some(rl);
                                                 app.draw_layer = Some(dl);
@@ -447,7 +447,6 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                         }
                                     },
                                     1 => {
-                                        //println!("OOOOOO");
                                         let ((x, y), (w, h)) = app.draw_layer.as_ref().unwrap().get_pos_size().unwrap();
                                         let upleft = (x, y);
                                         let upright = (x + w, y);
