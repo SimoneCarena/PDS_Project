@@ -99,7 +99,7 @@ pub fn load_fonts() -> Result<BTreeMap<String, Font<'static>>, LoadFontError>{
         folders.push(home);
         folders.push(PathBuf::from("/usr/share/fonts"));
         folders.push(PathBuf::from("/usr/local/share/fonts"));
-        println!("{:?}",folders);
+        //println!("{:?}",folders);
         let mut dirs = Vec::new();
         for path in folders {
             let d = fs::read_dir(path);

@@ -151,7 +151,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         app.draw_status = DrawStatus::Shape(0);
                     }
 
-                    if ui.button("⚫").on_hover_text("Filled circle").clicked() {
+                    if ui.button("⏺").on_hover_text("Filled circle").clicked() {
                         if app.draw_layer.is_some() && app.rubber_layer.is_some() {
                             match app.draw_status {
                                 DrawStatus::Shape(1) => {
@@ -506,11 +506,11 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                         }
                                         //centro
                                         else if ((pos.x - offset > c1.0 + 10.0) && (pos.x - offset < c4.0 - 10.0)) && ((pos.y+app.scroll_qty - 50.0 > c1.1 +10.0) && (pos.y+app.scroll_qty - 50.0 < c4.1 - 10.0)) {
-                                            println!("Interno!!");
+                                            //println!("Interno!!");
                                             if ctx.input(|i| i.pointer.any_pressed()) {
                                                 app.corner = Some(Corner::Centre);
                                                 app.any_pressed = true;
-                                                println!("pressed");
+                                                //println!("pressed");
                                             }
                                         }
 
@@ -554,7 +554,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                                         }
                                                     };
 
-                                                    println!("{:?}", (wn,hn));
+                                                    //println!("{:?}", (wn,hn));
 
                                                     /*let ((xn, yn), (wn, hn)) = get_new_area_circle(
                                                     app.prev_mouse_pos.unwrap(),
