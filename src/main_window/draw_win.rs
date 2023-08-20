@@ -670,11 +670,26 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                             }
                         }
 
-                        //app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                        app.backup_image = app.image.clone();
+                        app.backup_image_to_save = app.image_to_save.clone();
+
                         app.prev = app.status;
                         app.status = Image;
                         app.draw_status = DrawStatus::Shape(0);
                     }
+
+                    if ui.add(egui::Button::new("Undo")).clicked(){
+                        app.backup_image_to_save.as_mut().unwrap().undo();
+                        let di = app.backup_image_to_save.as_ref().unwrap().show();
+                        app.backup_image = Some(ctx.load_texture(
+                            "my-image",
+                            get_image_from_memory(di, 0, 0, 1, 1),
+                            Default::default()
+                        ));
+                        app.image = app.backup_image.clone();
+                        app.image_to_save = app.backup_image_to_save.clone();
+                    }
+
                     if ui.add(egui::Button::new("Back")).clicked() {
                         app.prev = app.status;
                         app.image = app.backup_image.clone();
