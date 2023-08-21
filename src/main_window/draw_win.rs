@@ -42,9 +42,9 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         if app.draw_layer.is_some() && app.rubber_layer.is_some() {
                             match app.draw_status {
                                 DrawStatus::Shape(1) => {
-                                    app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                                    app.backup_image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
                                     let di = app.image_to_save.as_ref().unwrap().show();
-                                    app.image = Some(ctx.load_texture(
+                                    app.backup_image = Some(ctx.load_texture(
                                         "my-image",
                                         get_image_from_memory(di, 0, 0, 1, 1),
                                         Default::default()
@@ -61,9 +61,9 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         if app.draw_layer.is_some() && app.rubber_layer.is_some() {
                             match app.draw_status {
                                 DrawStatus::Shape(1) => {
-                                    app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                                    app.backup_image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
                                     let di = app.image_to_save.as_ref().unwrap().show();
-                                    app.image = Some(ctx.load_texture(
+                                    app.backup_image = Some(ctx.load_texture(
                                         "my-image",
                                         get_image_from_memory(di, 0, 0, 1, 1),
                                         Default::default()
@@ -73,7 +73,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                             }
                         }
 
-                        let (rl, dl) = app.image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
+                        let (rl, dl) = app.backup_image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
                         app.rubber_layer = Some(rl);
                         app.draw_layer = Some(dl);
                         app.draw_status = DrawStatus::Rubber;
@@ -83,9 +83,9 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         if app.draw_layer.is_some() && app.rubber_layer.is_some() {
                             match app.draw_status {
                                 DrawStatus::Shape(1) => {
-                                    app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
-                                    let di = app.image_to_save.as_ref().unwrap().show();
-                                    app.image = Some(ctx.load_texture(
+                                    app.backup_image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                                    let di = app.backup_image_to_save.as_ref().unwrap().show();
+                                    app.backup_image = Some(ctx.load_texture(
                                         "my-image",
                                         get_image_from_memory(di, 0, 0, 1, 1),
                                         Default::default()
@@ -94,7 +94,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                 _ => {}
                             }
                         }
-                        let (rl, dl) = app.image_to_save.as_ref().unwrap().highlight_init();
+                        let (rl, dl) = app.backup_image_to_save.as_ref().unwrap().highlight_init();
                         app.rubber_layer = Some(rl);
                         app.draw_layer = Some(dl);
                         app.draw_status = DrawStatus::Highlight;
@@ -117,9 +117,9 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         if app.draw_layer.is_some() && app.rubber_layer.is_some() {
                             match app.draw_status {
                                 DrawStatus::Shape(1) => {
-                                    app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
-                                    let di = app.image_to_save.as_ref().unwrap().show();
-                                    app.image = Some(ctx.load_texture(
+                                    app.backup_image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                                    let di = app.backup_image_to_save.as_ref().unwrap().show();
+                                    app.backup_image = Some(ctx.load_texture(
                                         "my-image",
                                         get_image_from_memory(di, 0, 0, 1, 1),
                                         Default::default()
@@ -136,9 +136,9 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         if app.draw_layer.is_some() && app.rubber_layer.is_some() {
                             match app.draw_status {
                                 DrawStatus::Shape(1) => {
-                                    app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
-                                    let di = app.image_to_save.as_ref().unwrap().show();
-                                    app.image = Some(ctx.load_texture(
+                                    app.backup_image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                                    let di = app.backup_image_to_save.as_ref().unwrap().show();
+                                    app.backup_image = Some(ctx.load_texture(
                                         "my-image",
                                         get_image_from_memory(di, 0, 0, 1, 1),
                                         Default::default()
@@ -155,9 +155,9 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         if app.draw_layer.is_some() && app.rubber_layer.is_some() {
                             match app.draw_status {
                                 DrawStatus::Shape(1) => {
-                                    app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
-                                    let di = app.image_to_save.as_ref().unwrap().show();
-                                    app.image = Some(ctx.load_texture(
+                                    app.backup_image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                                    let di = app.backup_image_to_save.as_ref().unwrap().show();
+                                    app.backup_image = Some(ctx.load_texture(
                                         "my-image",
                                         get_image_from_memory(di, 0, 0, 1, 1),
                                         Default::default()
@@ -174,9 +174,9 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         if app.draw_layer.is_some() && app.rubber_layer.is_some() {
                             match app.draw_status {
                                 DrawStatus::Shape(1) => {
-                                    app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
-                                    let di = app.image_to_save.as_ref().unwrap().show();
-                                    app.image = Some(ctx.load_texture(
+                                    app.backup_image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                                    let di = app.backup_image_to_save.as_ref().unwrap().show();
+                                    app.backup_image = Some(ctx.load_texture(
                                         "my-image",
                                         get_image_from_memory(di, 0, 0, 1, 1),
                                         Default::default()
@@ -193,9 +193,9 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         if app.draw_layer.is_some() && app.rubber_layer.is_some() {
                             match app.draw_status {
                                 DrawStatus::Shape(1) => {
-                                    app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
-                                    let di = app.image_to_save.as_ref().unwrap().show();
-                                    app.image = Some(ctx.load_texture(
+                                    app.backup_image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                                    let di = app.backup_image_to_save.as_ref().unwrap().show();
+                                    app.backup_image = Some(ctx.load_texture(
                                         "my-image",
                                         get_image_from_memory(di, 0, 0, 1, 1),
                                         Default::default()
@@ -212,9 +212,9 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         if app.draw_layer.is_some() && app.rubber_layer.is_some() {
                             match app.draw_status {
                                 DrawStatus::Shape(1) => {
-                                    app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
-                                    let di = app.image_to_save.as_ref().unwrap().show();
-                                    app.image = Some(ctx.load_texture(
+                                    app.backup_image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                                    let di = app.backup_image_to_save.as_ref().unwrap().show();
+                                    app.backup_image = Some(ctx.load_texture(
                                         "my-image",
                                         get_image_from_memory(di, 0, 0, 1, 1),
                                         Default::default()
@@ -231,9 +231,9 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         if app.draw_layer.is_some() && app.rubber_layer.is_some() {
                             match app.draw_status {
                                 DrawStatus::Shape(1) => {
-                                    app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
-                                    let di = app.image_to_save.as_ref().unwrap().show();
-                                    app.image = Some(ctx.load_texture(
+                                    app.backup_image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                                    let di = app.backup_image_to_save.as_ref().unwrap().show();
+                                    app.backup_image = Some(ctx.load_texture(
                                         "my-image",
                                         get_image_from_memory(di, 0, 0, 1, 1),
                                         Default::default()
@@ -250,9 +250,9 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         if app.draw_layer.is_some() && app.rubber_layer.is_some() {
                             match app.draw_status {
                                 DrawStatus::Shape(1) => {
-                                    app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
-                                    let di = app.image_to_save.as_ref().unwrap().show();
-                                    app.image = Some(ctx.load_texture(
+                                    app.backup_image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                                    let di = app.backup_image_to_save.as_ref().unwrap().show();
+                                    app.backup_image = Some(ctx.load_texture(
                                         "my-image",
                                         get_image_from_memory(di, 0, 0, 1, 1),
                                         Default::default()
@@ -343,17 +343,17 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                             DrawStatus::Draw => {
                                                 app.prev_edge = Some(Image::draw_point(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), (app.pencil_rubber_thickness as f32) as i32, &app.draw_color));
                                                 di = app.draw_layer.as_ref().unwrap().show();
-                                                app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
+                                                app.backup_image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
                                             },
                                             DrawStatus::Rubber => {
                                                 app.prev_edge = Some(Image::rubber(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), app.pencil_rubber_thickness));
                                                 di = app.draw_layer.as_ref().unwrap().show_rubber(app.rubber_layer.as_ref().unwrap());
-                                                app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
+                                                app.backup_image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
                                             },
                                             DrawStatus::Highlight => {
                                                 app.prev_edge = Some(Image::highlight(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), (app.highlight_thickness as f32) as i32, &app.highlight_color));
                                                 di = app.draw_layer.as_ref().unwrap().show_higlight(app.rubber_layer.as_ref().unwrap());
-                                                app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
+                                                app.backup_image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
                                             },
                                             _ => {}
                                         }
@@ -363,18 +363,18 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                         app.any_pressed = false;
                                         match app.draw_status {
                                             DrawStatus::Draw => {
-                                                app.image_to_save.as_mut().unwrap().free_hand_draw_set(app.draw_layer.take().unwrap(), app.prev_edge.unwrap().clone().2, (app.pencil_rubber_thickness as f32 *1.5) as i32, &app.draw_color);
-                                                app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
+                                                app.backup_image_to_save.as_mut().unwrap().free_hand_draw_set(app.draw_layer.take().unwrap(), app.prev_edge.unwrap().clone().2, (app.pencil_rubber_thickness as f32 *1.5) as i32, &app.draw_color);
+                                                app.draw_layer = Some(app.backup_image_to_save.as_ref().unwrap().free_hand_draw_init());
                                             },
                                             DrawStatus::Rubber => {
-                                                app.image_to_save.as_mut().unwrap().rubber_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, app.pencil_rubber_thickness*2);
-                                                let (rl, dl) = app.image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
+                                                app.backup_image_to_save.as_mut().unwrap().rubber_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, app.pencil_rubber_thickness*2);
+                                                let (rl, dl) = app.backup_image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
                                                 app.rubber_layer = Some(rl);
                                                 app.draw_layer = Some(dl);
                                             },
                                             DrawStatus::Highlight => {
-                                                app.image_to_save.as_mut().unwrap().highlight_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, (app.highlight_thickness as f32 * 1.5) as i32, &app.highlight_color);
-                                                let (rl, dl) = app.image_to_save.as_ref().unwrap().highlight_init();
+                                                app.backup_image_to_save.as_mut().unwrap().highlight_set(app.draw_layer.take().unwrap(), app.rubber_layer.as_ref().unwrap(), app.prev_edge.unwrap().clone().2, (app.highlight_thickness as f32 * 1.5) as i32, &app.highlight_color);
+                                                let (rl, dl) = app.backup_image_to_save.as_ref().unwrap().highlight_init();
                                                 app.rubber_layer = Some(rl);
                                                 app.draw_layer = Some(dl);
                                             }
@@ -408,7 +408,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                                         start.1 = (image_size.y - 100.0) as u32;
                                                     }
 
-                                                    let (rl, dl) = app.image_to_save.as_ref().unwrap().shape_init(start, (300, 200));
+                                                    let (rl, dl) = app.backup_image_to_save.as_ref().unwrap().shape_init(start, (300, 200));
                                                     app.rubber_layer = Some(rl);
                                                     app.draw_layer = Some(dl);
 
@@ -428,7 +428,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                                     //Image::draw_filled_rectangle(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), (300, 200), &app.draw_color);
                                                     //Image::draw_filled_circle(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), 400, &app.draw_color);
                                                     di = app.draw_layer.as_ref().unwrap().show_shape(app.rubber_layer.as_ref().unwrap());
-                                                    app.image = Some(
+                                                    app.backup_image = Some(
                                                         ctx.load_texture("my-image",
                                                                          get_image_from_memory(di, 0, 0, 1, 1),
                                                                          Default::default()
@@ -537,7 +537,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                                                 app.cur_mouse_pos.unwrap(),
                                                                 (x, y),
                                                                 w,
-                                                                (app.image_to_save.as_ref().unwrap().width(), app.image_to_save.as_ref().unwrap().height()),
+                                                                (app.backup_image_to_save.as_ref().unwrap().width(), app.backup_image_to_save.as_ref().unwrap().height()),
                                                                 app.corner.unwrap()
                                                             )
                                                         },
@@ -547,7 +547,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                                                 app.cur_mouse_pos.unwrap(),
                                                                 (x, y),
                                                                 (w, h),
-                                                                (app.image_to_save.as_ref().unwrap().width(), app.image_to_save.as_ref().unwrap().height()),
+                                                                (app.backup_image_to_save.as_ref().unwrap().width(), app.backup_image_to_save.as_ref().unwrap().height()),
                                                                 app.corner.unwrap()
                                                             )
                                                         }
@@ -616,7 +616,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
 
                                                     let di = app.draw_layer.as_ref().unwrap().show_shape(app.rubber_layer.as_ref().unwrap());    //app.bl_ar.as_ref().unwrap().show();
 
-                                                    app.image = Some(ctx.load_texture(
+                                                    app.backup_image = Some(ctx.load_texture(
                                                         "my-image",
                                                         get_image_from_memory(di, 0, 0, 1, 1),
                                                         Default::default()
@@ -649,7 +649,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                 }
 
                 ui.vertical_centered(|ui| {
-                    ui.add(egui::Image::new(app.image.as_ref().unwrap(), app.image.as_ref().unwrap().size_vec2() * app.window_image_ratio));
+                    ui.add(egui::Image::new(app.backup_image.as_ref().unwrap(), app.backup_image.as_ref().unwrap().size_vec2() * app.window_image_ratio));
                 });
 
                 ui.horizontal(|ui| {
@@ -658,9 +658,9 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         if app.draw_layer.is_some() && app.rubber_layer.is_some() {
                             match app.draw_status {
                                 DrawStatus::Shape(_) => {
-                                    app.image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
-                                    let di = app.image_to_save.as_ref().unwrap().show();
-                                    app.image = Some(ctx.load_texture(
+                                    app.backup_image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                                    let di = app.backup_image_to_save.as_ref().unwrap().show();
+                                    app.backup_image = Some(ctx.load_texture(
                                         "my-image",
                                         get_image_from_memory(di, 0, 0, 1, 1),
                                         Default::default()
@@ -670,8 +670,8 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                             }
                         }
 
-                        app.backup_image = app.image.clone();
-                        app.backup_image_to_save = app.image_to_save.clone();
+                        app.image = app.backup_image.clone();
+                        app.image_to_save = app.backup_image_to_save.clone();
 
                         app.prev = app.status;
                         app.status = Image;
@@ -679,23 +679,23 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                     }
 
                     if ui.add(egui::Button::new("↺")).clicked(){
-                        let di = app.image_to_save.as_mut().unwrap().undo();
-                        app.image = Some(ctx.load_texture(
+                        let di = app.backup_image_to_save.as_mut().unwrap().undo();
+                        app.backup_image = Some(ctx.load_texture(
                             "my-image",
                             get_image_from_memory(di, 0, 0, 1, 1),
                             Default::default()
                         ));
                         match app.draw_status {
                             DrawStatus::Draw => {
-                                app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
+                                app.draw_layer = Some(app.backup_image_to_save.as_ref().unwrap().free_hand_draw_init());
                             },
                             DrawStatus::Highlight => {
-                                let (rl, dl) = app.image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
+                                let (rl, dl) = app.backup_image_to_save.as_ref().unwrap().rubber_init(app.last_crop_data);
                                 app.rubber_layer = Some(rl);
                                 app.draw_layer = Some(dl);
                             },
                             DrawStatus::Rubber => {
-                                let (rl, dl) = app.image_to_save.as_ref().unwrap().highlight_init();
+                                let (rl, dl) = app.backup_image_to_save.as_ref().unwrap().highlight_init();
                                 app.rubber_layer = Some(rl);
                                 app.draw_layer = Some(dl);
                             },
@@ -705,8 +705,8 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
 
                     if ui.add(egui::Button::new("Back")).clicked() {
                         app.prev = app.status;
-                        app.image = app.backup_image.clone();
-                        app.image_to_save = app.backup_image_to_save.clone();
+                        app.backup_image = app.image.clone();
+                        app.backup_image_to_save = app.image_to_save.clone();
                         app.status = Image;
                     }
                 });
