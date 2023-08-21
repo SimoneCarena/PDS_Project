@@ -1,4 +1,4 @@
-# PDS_Project
+# Screen Capture Utility
 
 This Project was developed by:
 - [Cappello Alessio](https://github.com/AlessioCappello2)
