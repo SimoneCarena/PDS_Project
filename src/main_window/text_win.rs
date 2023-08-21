@@ -117,7 +117,7 @@ pub fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                         start,
                                         &app.sel_color,
                                         app.image_text.as_str(),
-                                        (app.sel_font_size as f32)*5.0,/**app.window_image_ratio*20.0,*/
+                                        (app.sel_font_size as f32)*5.0,
                                         app.fonts.as_ref().unwrap().get(app.sel_font.as_ref().unwrap().as_str()).unwrap()
                                     );
                                     app.any_pressed = false;
@@ -158,15 +158,14 @@ pub fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                     }
 
                     if ui.add(egui::Button::new("↺")).clicked(){
-                        app.backup_image_to_save.as_mut().unwrap().undo();
-                        let di = app.backup_image_to_save.as_ref().unwrap().show();
+                        let di = app.backup_image_to_save.as_mut().unwrap().undo();
                         app.backup_image = Some(ctx.load_texture(
                             "my-image",
                             get_image_from_memory(di, 0, 0, 1, 1),
                             Default::default()
                         ));
-                        app.image = app.backup_image.clone();
-                        app.image_to_save = app.backup_image_to_save.clone();
+                        //app.image = app.backup_image.clone();
+                        //app.image_to_save = app.backup_image_to_save.clone();
                     }
 
                     if ui.add(egui::Button::new("Back")).clicked() {

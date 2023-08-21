@@ -102,10 +102,10 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
 
                     match app.draw_status{
                         DrawStatus::Draw | DrawStatus::Rubber => {
-                            ui.add(egui::Slider::new(&mut app.pencil_rubber_thickness, 1..=40).text("Trait size"));
+                            ui.add(egui::Slider::new(&mut app.pencil_rubber_thickness, 1..=60).text("Trait size"));
                         }
                         DrawStatus::Highlight => {
-                            ui.add(egui::Slider::new(&mut app.highlight_thickness, 1..=40).text("Trait size"));
+                            ui.add(egui::Slider::new(&mut app.highlight_thickness, 20..=80).text("Trait size"));
                         }
                         DrawStatus::Shape(_) => {}
                     }
@@ -337,21 +337,21 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                         false => {}
                                     }
 
-                                    let mut di;
+                                    let di;
                                     if app.any_pressed {
                                         match app.draw_status {
                                             DrawStatus::Draw => {
-                                                app.prev_edge = Some(Image::draw_point(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), (app.pencil_rubber_thickness as f32 * 1.5) as i32, &app.draw_color));
+                                                app.prev_edge = Some(Image::draw_point(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), (app.pencil_rubber_thickness as f32) as i32, &app.draw_color));
                                                 di = app.draw_layer.as_ref().unwrap().show();
                                                 app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
                                             },
                                             DrawStatus::Rubber => {
-                                                app.prev_edge = Some(Image::rubber(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), app.pencil_rubber_thickness*2));
+                                                app.prev_edge = Some(Image::rubber(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), app.pencil_rubber_thickness));
                                                 di = app.draw_layer.as_ref().unwrap().show_rubber(app.rubber_layer.as_ref().unwrap());
                                                 app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
                                             },
                                             DrawStatus::Highlight => {
-                                                app.prev_edge = Some(Image::highlight(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), (app.highlight_thickness as f32 * 1.5) as i32, &app.highlight_color));
+                                                app.prev_edge = Some(Image::highlight(app.draw_layer.as_mut().unwrap(), app.prev_edge.clone(), (cur.0 as i32, cur.1 as i32), (app.highlight_thickness as f32) as i32, &app.highlight_color));
                                                 di = app.draw_layer.as_ref().unwrap().show_higlight(app.rubber_layer.as_ref().unwrap());
                                                 app.image = Some(ctx.load_texture("my-image", get_image_from_memory(di, 0, 0, 1, 1), Default::default()));
                                             },
