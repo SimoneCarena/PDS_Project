@@ -12,6 +12,7 @@ use eframe::epaint::TextureHandle;
 use eframe::glow::Context;
 use global_hotkey::{GlobalHotKeyEvent, GlobalHotKeyManager};
 use global_hotkey::hotkey::HotKey;
+use image::DynamicImage;
 use keyboard_types::{Code, Modifiers};
 use rusttype::Font;
 use crate::hotkey_popup::*;
@@ -28,6 +29,7 @@ use crate::image_proc::Image;
 use crate::image_proc::extensions::Extensions;
 use crate::image_proc::image_errors::ImageManipulationError;
 use crate::image_proc::layer::Layer;
+use crate::load_assets::load_borders;
 use crate::load_fonts::{load_fonts, load_fonts_fallback};
 use crate::main_window::crop_win::crop_window;
 use crate::main_window::draw_win::draw_window;
@@ -131,6 +133,7 @@ pub struct MyApp {
     draw_layer: Option<Layer>,
     prev_edge: Option<((i32, i32), (i32, i32), (i32, i32))>,
     fonts: Option<BTreeMap<String, Font<'static>>>,
+    borders: Option<HashMap<String, DynamicImage>>,
     sel_font: Option<String>,
     sel_font_size: usize,
     sel_color: Color,
@@ -183,6 +186,7 @@ impl MyApp {
             draw_layer: None,
             prev_edge: None,
             fonts: None,
+            borders: None,
             sel_font: None,
             sel_font_size: 12usize,
             sel_color: Color::new(0, 0, 0, 1.0),
@@ -303,6 +307,8 @@ impl MyApp {
                 }
             }
         });
+
+        ret.borders = Some(load_borders().unwrap());
 
         if !ret.fonts.as_ref().unwrap().contains_key(ret.sel_font.as_ref().unwrap()){
             ret.sel_font = Some(ret.fonts.as_ref().unwrap().iter().nth(0).unwrap().0.clone());

@@ -106,7 +106,7 @@ pub fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                             );
 
                             app.bl_ar.as_mut().unwrap().resize((xn, yn), (wn, hn));
-                            let di = app.bl_ar.as_ref().unwrap().show();
+                            let di = app.bl_ar.as_ref().unwrap().show(app.borders.as_ref().unwrap());
 
                             app.image = Some(ctx.load_texture(
                                 "my-image",

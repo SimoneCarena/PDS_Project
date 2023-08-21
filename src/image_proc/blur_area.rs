@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use image::DynamicImage;
 use imageproc::rect::Rect;
 
@@ -23,9 +24,8 @@ impl BlurArea {
     pub fn get_crop_data(&self) -> ((u32,u32),(u32,u32)) {
         (self.crop_position,self.crop_size)
     }
-    pub fn show(&self) -> DynamicImage {
+    pub fn show(&self, borders: &HashMap<String, DynamicImage>) -> DynamicImage {
 
-        let borders = crate::load_assets::load_borders().unwrap();
         let (x,y) = self.crop_position;
         let x = x as i64;
         let y = y as i64;
