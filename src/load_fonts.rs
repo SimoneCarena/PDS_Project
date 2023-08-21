@@ -1,7 +1,7 @@
 pub mod font_errors;
 
 use std::path::{PathBuf, Path};
-use std::collections::{HashMap, BTreeMap};
+use std::collections::BTreeMap;
 use std::fs;
 use rusttype::Font;
 use std::io::Read;
@@ -51,6 +51,7 @@ pub fn load_fonts() -> Result<BTreeMap<String, Font<'static>>, LoadFontError>{
         home.push("Library/Fonts");
         folders.push(home);
         folders.push(PathBuf::from("/Library/Fonts"));
+        folders.push(PathBuf::from("/Volumes/Macintosh HD/System/Library/Fonts"));
         let mut dirs = Vec::new();
         for path in folders {
             let d = fs::read_dir(path);
