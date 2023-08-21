@@ -678,7 +678,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         app.draw_status = DrawStatus::Shape(0);
                     }
 
-                    if ui.add(egui::Button::new("Undo")).clicked(){
+                    if ui.add(egui::Button::new("↺")).clicked(){
                         let di = app.image_to_save.as_mut().unwrap().undo();
                         app.image = Some(ctx.load_texture(
                             "my-image",

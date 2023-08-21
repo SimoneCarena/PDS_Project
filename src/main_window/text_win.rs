@@ -157,7 +157,7 @@ pub fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
 
                     }
 
-                    if ui.add(egui::Button::new("Undo")).clicked(){
+                    if ui.add(egui::Button::new("↺")).clicked(){
                         app.backup_image_to_save.as_mut().unwrap().undo();
                         let di = app.backup_image_to_save.as_ref().unwrap().show();
                         app.backup_image = Some(ctx.load_texture(
