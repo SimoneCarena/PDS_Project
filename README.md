@@ -1,5 +1,10 @@
 # PDS_Project
 
+This Project was developed by:
+- [Cappello Alessio](https://github.com/AlessioCappello2)
+- [Carena Simone](https://github.com/SimoneCarena)
+- [Cavallotti Edoardo](https://github.com/edocava)
+
 ## Creating a Screenshot Utility using the Rust Programming Language
 
 The aim is to create a screen grabbing utility capable of acquiring what is currently shown in a display, post-process it and make it available in one or more formats.
