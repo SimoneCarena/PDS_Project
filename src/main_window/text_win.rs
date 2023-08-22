@@ -157,7 +157,7 @@ pub fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
 
                     }
 
-                    if ui.add(egui::Button::new("↺")).clicked(){
+                    if ui.add(egui::Button::new("↩")).clicked(){
                         let di = app.backup_image_to_save.as_mut().unwrap().undo();
                         app.backup_image = Some(ctx.load_texture(
                             "my-image",

@@ -90,17 +90,7 @@ pub fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fr
                 }
             }
 
-            if ui.button("RotLeft").on_hover_text("Rotate Clockwise").clicked(){
-                app.image_to_save.as_mut().unwrap().rotate90cv();
-                let di = app.image_to_save.as_ref().unwrap().show();
-                app.image = Some(ctx.load_texture(
-                    "my-image",
-                    get_image_from_memory(di, 0, 0, 1, 1),
-                    Default::default()
-                ));
-            }
-
-            if ui.button("RotRight").on_hover_text("Rotate Anticlockwise").clicked(){
+            if ui.button("↺").on_hover_text("Rotate Counter-Clockwise").clicked(){
                 app.image_to_save.as_mut().unwrap().rotate270cv();
                 let di = app.image_to_save.as_ref().unwrap().show();
                 app.image = Some(ctx.load_texture(
@@ -110,7 +100,17 @@ pub fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fr
                 ));
             }
 
-            if ui.button("FH").on_hover_text("Flip Horizontally").clicked(){
+            if ui.button("↻").on_hover_text("Rotate Clockwise").clicked(){
+                app.image_to_save.as_mut().unwrap().rotate90cv();
+                let di = app.image_to_save.as_ref().unwrap().show();
+                app.image = Some(ctx.load_texture(
+                    "my-image",
+                    get_image_from_memory(di, 0, 0, 1, 1),
+                    Default::default()
+                ));
+            }
+
+            if ui.button("⬌").on_hover_text("Flip Horizontally").clicked(){
                 app.image_to_save.as_mut().unwrap().flip_horizontally();
                 let di = app.image_to_save.as_ref().unwrap().show();
                 app.image = Some(ctx.load_texture(
@@ -120,7 +120,7 @@ pub fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fr
                 ));
             }
 
-            if ui.button("FV").on_hover_text("Flip Vertically").clicked(){
+            if ui.button("⬍").on_hover_text("Flip Vertically").clicked(){
                 app.image_to_save.as_mut().unwrap().flip_vertically();
                 let di = app.image_to_save.as_ref().unwrap().show();
                 app.image = Some(ctx.load_texture(
