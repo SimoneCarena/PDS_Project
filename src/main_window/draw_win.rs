@@ -678,7 +678,14 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         app.draw_status = DrawStatus::Shape(0);
                     }
 
-                    if ui.add(egui::Button::new("↺")).clicked(){
+                    if ui.add(egui::Button::new("↩")).clicked(){
+                        match app.draw_status {
+                            DrawStatus::Shape(_) => {
+                                app.backup_image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
+                                app.draw_status = DrawStatus::default();
+                            },
+                            _ => {}
+                        }
                         let di = app.backup_image_to_save.as_mut().unwrap().undo();
                         app.backup_image = Some(ctx.load_texture(
                             "my-image",
