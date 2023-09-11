@@ -28,7 +28,7 @@ use shape::Arrow;
 static UNNAMED_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 ///Structure containing the base screenshot, its size and the additional layers of editing applied to it
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Image {
     base: DynamicImage,
     layers: VecDeque<DynamicImage>

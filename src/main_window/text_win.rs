@@ -135,7 +135,7 @@ pub fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
 
                 ui.vertical_centered(|ui| {
                     ui.add(egui::Image::new(app.backup_image.as_ref().unwrap(),
-                                            app.backup_image.as_ref().unwrap().size_vec2() * app.window_image_ratio));
+                                                app.backup_image.as_ref().unwrap().size_vec2() * app.window_image_ratio));
                 });
 
 
@@ -155,6 +155,13 @@ pub fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         app.image = app.backup_image.clone();
                         app.image_to_save = app.backup_image_to_save.clone();
 
+                        if !app.all_images.is_empty(){
+                            let _ = app.all_images.remove(app.sel_image);
+                            let _ = app.all_images_to_save.remove(app.sel_image);
+                            app.all_images_to_save.insert(app.sel_image, app.image_to_save.as_ref().unwrap().clone());
+                            app.all_images.insert(app.sel_image, app.image.as_ref().unwrap().clone());
+                        }
+
                     }
 
                     if ui.add(egui::Button::new("↩")).clicked(){
@@ -173,6 +180,13 @@ pub fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         app.backup_image = app.image.clone();
                         app.backup_image_to_save = app.image_to_save.clone();
                         app.status = Image;
+
+                        if !app.all_images.is_empty(){
+                            let _ = app.all_images.remove(app.sel_image);
+                            let _ = app.all_images_to_save.remove(app.sel_image);
+                            app.all_images_to_save.insert(app.sel_image, app.image_to_save.as_ref().unwrap().clone());
+                            app.all_images.insert(app.sel_image, app.image.as_ref().unwrap().clone());
+                        }
                     }
                 });
             });

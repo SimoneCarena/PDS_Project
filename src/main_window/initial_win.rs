@@ -18,6 +18,17 @@ pub fn initial_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::
                 app.status = Hidden;
             }
 
+            if app.screens.len()>1{
+                if ui.button("📷 Take All").on_hover_text("Take a new capture of all the screens together").clicked(){
+                    frame.set_visible(false);
+                    app.disabled_time = ui.input(|i| i.time);
+                    app.prev = app.status;
+                    app.instant_flag = true;
+                    app.status = Hidden;
+                    app.all_screens = true;
+                }
+            }
+
             if ui.button("⏰ Delay").on_hover_text("Delay a new capture").clicked(){
                 frame.set_visible(false);
                 app.disabled_time = ui.input(|i| i.time);
@@ -27,7 +38,7 @@ pub fn initial_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::
             }
 
             if app.screens.len()>1{
-                egui::ComboBox::from_label("")
+                egui::ComboBox::from_label("").width(10.0)
                     .selected_text(format!("Screen: {}", app.sel_screen+1))
                     .show_ui(ui, |ui| {
                         for i in 0..app.screens.len(){
@@ -37,7 +48,7 @@ pub fn initial_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::
             }
 
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Max), |ui|{
-                if ui.button("⚙ Settings").on_hover_text("General settings").clicked(){
+                if ui.button("⚙").on_hover_text("General settings").clicked(){
                     app.prev = app.status;
                     app.status = Settings;
                 }
