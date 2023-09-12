@@ -58,5 +58,8 @@ pub fn initial_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::
         ui.vertical_centered(|ui|{
             ui.add(egui::TextEdit::singleline(&mut "Press Take to capture a new screenshot"));
         });
+        ui.vertical_centered(|ui|{
+            ui.add(egui::TextEdit::multiline(&mut "Press Take All to capture a new screenshot from all the connected screens"));
+        });
     });
 }

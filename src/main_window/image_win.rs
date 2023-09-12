@@ -149,10 +149,10 @@ pub fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fr
                    if !app.all_images_to_save.is_empty() {
                        ui.add_space(10.0);
                             egui::ComboBox::from_label("I")
-                                .selected_text(format!("Image#: {}", app.sel_image)).width(10.0)
+                                .selected_text(format!("Image#: {}", app.sel_image+1)).width(10.0)
                                 .show_ui(ui, |ui| {
                                     for index in 0..app.all_images_to_save.len() {
-                                        ui.selectable_value(&mut app.sel_image, index, format!("{index}"));
+                                        ui.selectable_value(&mut app.sel_image, index, format!("{}", index+1));
                                     }
 
                                     app.image = Some(app.all_images.get(app.sel_image).unwrap().clone());

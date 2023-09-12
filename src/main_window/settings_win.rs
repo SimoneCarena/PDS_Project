@@ -145,7 +145,7 @@ pub fn settings_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe:
                 ui.heading("Save Extension");
                 ui.horizontal(|ui|{
                     ui.add_space(15.0);
-                    egui::ComboBox::from_label(format!("Select the Save EXTENSION!")).width(15.0)
+                    egui::ComboBox::from_label(format!("Save Extension: ")).width(15.0)
                         .selected_text(format!("{:?}", app.extension_copy))
                         .show_ui(ui, |ui| {
                             ui.selectable_value(&mut app.extension_copy, Extensions::PNG, "PNG");

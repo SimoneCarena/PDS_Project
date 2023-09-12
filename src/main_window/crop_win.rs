@@ -154,6 +154,13 @@ pub fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                     Default::default()
                 ));
 
+                if !app.all_images.is_empty(){
+                    let _ = app.all_images.remove(app.sel_image);
+                    let _ = app.all_images_to_save.remove(app.sel_image);
+                    app.all_images_to_save.insert(app.sel_image, app.image_to_save.as_ref().unwrap().clone());
+                    app.all_images.insert(app.sel_image, app.image.as_ref().unwrap().clone());
+                }
+
             }
 
             if ui.add(egui::Button::new("Back")).clicked(){
@@ -161,7 +168,14 @@ pub fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                 app.status = Image;
                 app.bl_ar = None;
                 app.image_to_save = app.backup_image_to_save.clone();
-                app.image = app.backup_image.clone()
+                app.image = app.backup_image.clone();
+
+                if !app.all_images.is_empty(){
+                    let _ = app.all_images.remove(app.sel_image);
+                    let _ = app.all_images_to_save.remove(app.sel_image);
+                    app.all_images_to_save.insert(app.sel_image, app.image_to_save.as_ref().unwrap().clone());
+                    app.all_images.insert(app.sel_image, app.image.as_ref().unwrap().clone());
+                }
             }
         });
 
