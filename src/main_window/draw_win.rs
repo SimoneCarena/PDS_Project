@@ -453,7 +453,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                         let downleft = (x, y + h);
                                         let downright = (x + w, y + h);
 
-                                        //println!("{:?}", (x, y));
+                                        println!("{:?}", (x+w, y+h));
 
                                         let c1 = cursor_position(upleft, 1.0 / app.window_image_ratio);
                                         let c1 = (c1.0 as f32, c1.1 as f32);
@@ -568,44 +568,36 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                                         Shape::FilledRectangle => Image::draw_filled_rectangle(app.draw_layer.as_mut().unwrap(),
                                                                                                                app.rubber_layer.as_mut().unwrap(),
                                                                                                                ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
-                                                                                                               (wn as i32, hn as i32), &app.draw_color
-                                                        ),
+                                                                                                               (wn as i32, hn as i32), &app.draw_color),
                                                         Shape::EmptyRectangle => Image::draw_empty_rectangle(app.draw_layer.as_mut().unwrap(),
                                                                                                              app.rubber_layer.as_mut().unwrap(),
                                                                                                              ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
-                                                                                                             (wn as i32, hn as i32), &app.draw_color, app.pencil_rubber_thickness
-                                                        ),
+                                                                                                             (wn as i32, hn as i32), &app.draw_color, app.pencil_rubber_thickness),
                                                         Shape::FilledCircle => Image::draw_filled_circle(app.draw_layer.as_mut().unwrap(),
                                                                                                          app.rubber_layer.as_mut().unwrap(),
                                                                                                          ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
-                                                                                                         wn as i32, &app.draw_color
-                                                        ),
+                                                                                                         wn as i32, &app.draw_color),
                                                         Shape::EmptyCircle => Image::draw_empty_circle(app.draw_layer.as_mut().unwrap(),
                                                                                                        app.rubber_layer.as_mut().unwrap(),
                                                                                                        ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
-                                                                                                       wn as i32, &app.draw_color, app.pencil_rubber_thickness
-                                                        ),
+                                                                                                       wn as i32, &app.draw_color, app.pencil_rubber_thickness),
                                                         Shape::Arrow(dir) => match dir {
                                                             Pointing::Left => Image::draw_filled_left_arrow(app.draw_layer.as_mut().unwrap(),
                                                                                                             app.rubber_layer.as_mut().unwrap(),
                                                                                                             ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
-                                                                                                            (wn as i32, hn as i32), &app.draw_color
-                                                            ),
+                                                                                                            (wn as i32, hn as i32), &app.draw_color),
                                                             Pointing::Right => Image::draw_filled_right_arrow(app.draw_layer.as_mut().unwrap(),
                                                                                                               app.rubber_layer.as_mut().unwrap(),
                                                                                                               ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
-                                                                                                              (wn as i32, hn as i32), &app.draw_color
-                                                            ),
+                                                                                                              (wn as i32, hn as i32), &app.draw_color),
                                                             Pointing::Up => Image::draw_filled_up_arrow(app.draw_layer.as_mut().unwrap(),
                                                                                                         app.rubber_layer.as_mut().unwrap(),
                                                                                                         ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
-                                                                                                        (wn as i32, hn as i32), &app.draw_color
-                                                            ),
+                                                                                                        (wn as i32, hn as i32), &app.draw_color),
                                                             Pointing::Down => Image::draw_filled_down_arrow(app.draw_layer.as_mut().unwrap(),
                                                                                                             app.rubber_layer.as_mut().unwrap(),
                                                                                                             ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
-                                                                                                            (wn as i32, hn as i32), &app.draw_color
-                                                            ),
+                                                                                                            (wn as i32, hn as i32), &app.draw_color),
                                                         }
                                                     }
 

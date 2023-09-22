@@ -66,6 +66,7 @@ pub fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fr
                         app.rubber = false;
                         app.status = Draw;
                         app.draw_status = DrawStatus::Draw;
+                        app.scroll_qty = 0.0;
                     }
 
                     if ui.button("🇹 Text").on_hover_text("Write some text over the capture").clicked() {
@@ -73,6 +74,7 @@ pub fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fr
                         app.backup_image_to_save = app.image_to_save.clone();
                         app.prev = app.status;
                         app.status = Text;
+                        app.scroll_qty = 0.0;
                     }
 
                     if ui.button("📋 Copy").on_hover_text("Copy the capture on clipboard").clicked() {
@@ -199,6 +201,17 @@ pub fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fr
                             get_image_from_memory(di, 0, 0, 1, 1),
                             Default::default()
                         ));
+                    }
+
+                    if ui.button("↩").on_hover_text("Undo last edit").clicked() {
+                        let di = app.backup_image_to_save.as_mut().unwrap().undo();
+                        app.backup_image = Some(ctx.load_texture(
+                            "my-image",
+                            get_image_from_memory(di, 0, 0, 1, 1),
+                            Default::default()
+                        ));
+                        app.image = app.backup_image.clone();
+                        app.image_to_save = app.backup_image_to_save.clone();
                     }
                 });
 
