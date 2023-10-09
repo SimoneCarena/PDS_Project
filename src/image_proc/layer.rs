@@ -10,7 +10,6 @@ pub struct Layer {
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum LayerType {
-    Text,
     //hold the upper-left corner and the size
     Shape(((u32,u32),(u32,u32))),
     FreeHandDrawing,
@@ -44,12 +43,11 @@ impl Layer {
         let mut image = base.layer.clone();
         let mut area = RgbaImage::new(image.width(), image.height());
         let (pos, size) = self.get_pos_size().unwrap();
-        let rect = imageproc::rect::Rect::at(pos.0 as i32, pos.1 as i32).of_size(size.0, size.1);
         let blue = Color::new(0, 255, 255, 1.0);
 
         let width = self.layer.width();
         let height = self.layer.height();
-        //println!("{:?},{:?}",(size.0,size.1),pos);
+        let rect = imageproc::rect::Rect::at(pos.0 as i32, pos.1 as i32).of_size(size.0, size.1);
 
         let radius = (u32::min(width,height)/100) as i32;
 
@@ -76,7 +74,6 @@ impl Layer {
             LayerType::Shape((pos,size)) => {
                 Some((pos,size))
             },
-            LayerType::Text => None,
             LayerType::FreeHandDrawing => None,
             LayerType::BaseImage => None
         }

@@ -453,7 +453,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                                         let downleft = (x, y + h);
                                         let downright = (x + w, y + h);
 
-                                        println!("{:?}", (x+w, y+h));
+                                        //println!("{:?}", (x+w, y+h));
 
                                         let c1 = cursor_position(upleft, 1.0 / app.window_image_ratio);
                                         let c1 = (c1.0 as f32, c1.1 as f32);
