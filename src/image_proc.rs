@@ -115,14 +115,11 @@ impl Image {
         let size_2 = (diameter as u32, diameter as u32);
         let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
         let mut pos = (center.0-diameter/2, center.1-diameter/2);
-        diameter+=width;
-        pos.0 -= width/2;
-        pos.1 -= width/2;
-        for _ in -width/2..width/2{
+        for _ in 0..width{
+            drawing::draw_hollow_circle_mut(&mut new_canva, center, diameter/2, color.color);
             pos.0 += 1;
             pos.1 += 1;
             diameter-=2;
-            drawing::draw_hollow_circle_mut(&mut new_canva, center, diameter/2, color.color);
         }
         canva.layer = DynamicImage::ImageRgba8(new_canva);
         canva.layer_type = LayerType::Shape(((pos_2.0, pos_2.1),(size_2.0, size_2.1)));
@@ -144,17 +141,16 @@ impl Image {
         let size_2 = (size.0 as u32, size.1 as u32);
         let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
         let mut pos = (center.0-size.0/2, center.1-size.1/2);
-        size.0 += width;
-        size.1 += width;
-        pos.0 -= width/2;
-        pos.1 -= width/2;
-        for _ in -width/2..width/2{
+        for _ in 0..width{
+            let rect = Rect::at(pos.0, pos.1).of_size(size.0 as u32, size.1 as u32);
+            drawing::draw_hollow_rect_mut(&mut new_canva, rect, color.color);
             pos.0 += 1;
             pos.1 += 1;
             size.0-=2;
             size.1-=2;
-            let rect = Rect::at(pos.0, pos.1).of_size(size.0 as u32, size.1 as u32);
-            drawing::draw_hollow_rect_mut(&mut new_canva, rect, color.color);
+            if size.0 <=0 || size.1 <=0 {
+                break;
+            }
         }
         canva.layer = DynamicImage::ImageRgba8(new_canva);
         canva.layer_type = LayerType::Shape(((pos_2.0, pos_2.1),(size_2.0, size_2.1)));
