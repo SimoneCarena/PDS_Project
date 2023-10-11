@@ -1,14 +1,10 @@
-
 use eframe::egui;
-
 use crate::main_window::Status::*;
-
-use crate::image_proc::{get_image, load_image_from_memory, get_image_from_memory};
-
-use crate::main_window::{DrawStatus, min_my, MyApp, Pointing, Shape, take_capture};
+use crate::image_proc::get_image;
+use crate::main_window::{MyApp, take_capture};
 
 pub fn hidden_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
-    let mut enabled;
+    let enabled;
     if !app.instant_flag{
         enabled = ctx.input(|i| i.time) - app.disabled_time > app.delay_secs as f64;
     }else{

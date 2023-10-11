@@ -1,22 +1,12 @@
-
-use std::io::{BufRead, BufReader, BufWriter, Read, Write};
-use std::mem::forget;
-use std::path::Path;
 use eframe::egui;
-use eframe::egui::scroll_area::ScrollBarVisibility;
-use eframe::egui::{UserAttentionType, Vec2};
-
+use eframe::egui::{Vec2};
 use crate::main_window::Status::*;
-use crate::{image_proc, screensh};
 use crate::cursor_scaling::*;
-use crate::screensh::{Screen, Screenshot};
-use crate::screensh::screensh_errors::ScreenshotError;
-use crate::image_proc::{get_image, load_image_from_memory, get_image_from_memory};
-
+use crate::image_proc::{get_image_from_memory};
 use crate::main_window::{min_my, MyApp};
 
 
-pub fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
+pub fn crop_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Frame){
     egui::CentralPanel::default().show(ctx, |ui| {
         let window_size = Vec2::new(ctx.screen_rect().width()-5.0, ctx.screen_rect().height()-60.0);
         let image_size =  app.image.as_ref().unwrap().size_vec2();
@@ -92,7 +82,7 @@ pub fn crop_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
 
                     match app.prev_mouse_pos {
                         None => {}
-                        Some(p) => {
+                        Some(_p) => {
                             let ((x, y), (w, h)) = app.bl_ar.as_ref().unwrap().get_crop_data();
                             //println!("{:?} {:?}", app.prev_mouse_pos.unwrap(), app.cur_mouse_pos.unwrap());
 

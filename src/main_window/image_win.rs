@@ -1,12 +1,10 @@
-
 use eframe::egui;
 use eframe::egui::scroll_area::ScrollBarVisibility;
-use eframe::egui::{UserAttentionType, Vec2};
+use eframe::egui::Vec2;
 use crate::image_proc::get_image_from_memory;
-
 use crate::main_window::Status::*;
-
 use crate::main_window::{DrawStatus, min_my, MyApp};
+
 
 pub fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
     egui::CentralPanel::default().show(ctx, |ui| {
