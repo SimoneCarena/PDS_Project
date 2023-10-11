@@ -1,21 +1,14 @@
-
-use std::io::{BufRead, BufReader, BufWriter, Read, Write};
-
 use eframe::egui;
 use eframe::egui::scroll_area::ScrollBarVisibility;
-use eframe::egui::{UserAttentionType, Vec2};
-
+use eframe::egui::{Vec2};
 use crate::main_window::Status::*;
-use crate::{image_proc, screensh};
 use crate::cursor_scaling::*;
-
-use crate::image_proc::{get_image, load_image_from_memory, get_image_from_memory};
-
+use crate::image_proc::{get_image_from_memory};
 use crate::image_proc::Image;
-
 use crate::main_window::{DrawStatus, min_my, MyApp, Pointing, Shape};
 
-pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
+
+pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Frame){
 
     egui::CentralPanel::default().show(ctx, |ui| {
         egui::ScrollArea::vertical()
@@ -301,7 +294,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                     }
                 });
 
-                let mut di;
+                let di;
                 let offset = (ctx.screen_rect().width() - app.backup_image.as_ref().unwrap().size_vec2().x * app.window_image_ratio) / 2.0 -5.0;
                 match ctx.input(|i| i.pointer.hover_pos()) {
                     None => {}
@@ -527,7 +520,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
 
                                             match app.prev_mouse_pos {
                                                 None => {}
-                                                Some(p) => {
+                                                Some(_p) => {
                                                     let ((x, y), (w, h)) = app.draw_layer.as_ref().unwrap().get_pos_size().unwrap();  //app.bl_ar.as_ref().unwrap().get_crop_data();
                                                     //println!("{:?} {:?}", app.prev_mouse_pos.unwrap(), app.cur_mouse_pos.unwrap());
                                                     let ((xn, yn), (wn, hn)) = match app.which_shape.as_ref().unwrap() {

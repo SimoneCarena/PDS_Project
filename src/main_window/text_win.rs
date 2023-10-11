@@ -1,17 +1,17 @@
 
 use eframe::egui;
 use eframe::egui::scroll_area::ScrollBarVisibility;
-use eframe::egui::{UserAttentionType, Vec2};
+use eframe::egui::Vec2;
 
 use crate::main_window::Status::*;
-use crate::{image_proc, screensh};
+
 use crate::cursor_scaling::*;
 
-use crate::image_proc::{get_image, load_image_from_memory, get_image_from_memory};
+use crate::image_proc::get_image_from_memory;
 
 use crate::main_window::{min_my, MyApp};
 
-pub fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
+pub fn text_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Frame){
     egui::CentralPanel::default().show(ctx, |ui| {
         egui::ScrollArea::vertical()
             .scroll_bar_visibility(ScrollBarVisibility::AlwaysVisible)
@@ -43,7 +43,7 @@ pub fn text_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fra
                         .selected_text(format!("{}", app.sel_font.as_ref().unwrap()))
                         .show_ui(ui, |ui| {
                             app.dropdown_on = true;
-                            for (s, f) in app.fonts.as_ref().unwrap() {
+                            for (s, _f) in app.fonts.as_ref().unwrap() {
                                 ui.selectable_value(&mut app.sel_font, Some(s.clone()), s);
                             }
                         });

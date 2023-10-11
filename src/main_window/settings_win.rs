@@ -1,37 +1,12 @@
-use std::cmp::min;
-use std::collections::{HashMap, BTreeMap};
-use std::fs::File;
-use std::io::{BufRead, BufReader, BufWriter, Read, Write};
-use std::mem::forget;
 use std::path::Path;
 use eframe::egui;
 use eframe::egui::scroll_area::ScrollBarVisibility;
-use eframe::egui::{UserAttentionType, Vec2};
-use egui::Window;
-use eframe::epaint::TextureHandle;
-use eframe::glow::Context;
-use global_hotkey::{GlobalHotKeyEvent, GlobalHotKeyManager};
-use global_hotkey::hotkey::HotKey;
-use keyboard_types::{Code, Modifiers};
-use rusttype::Font;
+use keyboard_types::Code;
 use crate::hotkey_popup::*;
-use crate::main_window::Status::*;
-use crate::{image_proc, screensh};
-use crate::cursor_scaling::*;
-use crate::screensh::{Screen, Screenshot};
-use crate::screensh::screensh_errors::ScreenshotError;
-use crate::image_proc::{get_image, load_image_from_memory, get_image_from_memory};
-use crate::image_proc::blur_area::BlurArea;
-use crate::image_proc::colors::{Color, convert_f32_u8, convert_u8_f32};
-use crate::image_proc::load_image_from_path;
-use crate::image_proc::Image;
 use crate::image_proc::extensions::Extensions;
-use crate::image_proc::image_errors::ImageManipulationError;
-use crate::image_proc::layer::Layer;
-use crate::load_fonts::{load_fonts, load_fonts_fallback};
 use crate::main_window::MyApp;
 
-pub fn settings_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Frame){
+pub fn settings_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Frame){
     egui::CentralPanel::default().show(ctx, |ui| {
         egui::ScrollArea::vertical()
             .scroll_bar_visibility(ScrollBarVisibility::VisibleWhenNeeded)
@@ -88,7 +63,7 @@ pub fn settings_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe:
                                 ui.selectable_value(app.hk_copy.get_shortcuts(i).get_mut_selkey(), Code::KeyM, "m");
                             });
 
-                        let (mut id, mut str, mut hotk) = app.hk_copy.get_shortcuts(i).id_gen();
+                        let (_id, _str, hotk) = app.hk_copy.get_shortcuts(i).id_gen();
 
                         if app.forbidden_hk[i]{
                             ui.scope(|ui|{
