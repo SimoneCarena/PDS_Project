@@ -27,7 +27,7 @@ use shape::Arrow;
 ///Incremental counter for files whose name is not specified when saved
 static UNNAMED_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
-///Structure containing the base screenshot, its size and the additional layers of editing applied to it
+///Structure containing the base screenshot and the additional layers of editing applied to it
 #[derive(Debug, Clone, PartialEq)]
 pub struct Image {
     base: DynamicImage,
@@ -66,8 +66,6 @@ impl Image {
         BlurArea::new(image, blur, (x,y), (width,height))
     }
     ///Crops the image given a BlurArea previously obtained via the blur_area method
-    ///Once the crop is done it's not possible to go back and the layers get merged 
-    ///together and so also those modifications cannot be undone
     pub fn crop(&mut self, crop_area: BlurArea) {
         let ((x,y), (width, height)) = crop_area.get_crop_data();
         let cropped = crop_area.save().crop(x, y, width, height);
@@ -90,26 +88,20 @@ impl Image {
         self.layers.push_front(rotated);
         
     }
-    ///Rotates the image 180 degree clockwise
-    pub fn rotate180cv(&mut self) {
-        let rotated = self.layers[0].rotate180();
-        self.layers.push_front(rotated);
-    }
     ///Rotates the image 270 degree clockwise
     pub fn rotate270cv(&mut self) {
         let rotated = self.layers[0].rotate270();
         self.layers.push_front(rotated);
     }
-    ///Creates an additional layer containing a filled ellipse with given center, major semiaxis, minor semiaxis and color
+    ///Draws a filled circle with given center, diameter and color
     pub fn draw_filled_circle(canva: &mut Layer, base: &mut Layer, center: (i32, i32), diameter: i32, color: &Color) {
         let pos = (center.0-diameter/2, center.1-diameter/2);
-        //println!("{:?}",(base.layer.width() as u32, base.layer.height() as u32));
         let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
         drawing::draw_filled_circle_mut(&mut new_canva, center, diameter/2, color.color);
         canva.layer = DynamicImage::ImageRgba8(new_canva);
         canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(diameter as u32, diameter as u32)));
     }
-    ///Creates an additional layer containing an empty ellipse with given center, major semiaxis, minor semiaxis and color
+    ///Draws an empty circle with given center, diameter, color and contour width
     pub fn draw_empty_circle(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut diameter: i32, color: &Color, width: i32) {
         let pos_2 = ((center.0-diameter/2) as u32, (center.1-diameter/2) as u32);
         let size_2 = (diameter as u32, diameter as u32);
@@ -124,7 +116,7 @@ impl Image {
         canva.layer = DynamicImage::ImageRgba8(new_canva);
         canva.layer_type = LayerType::Shape(((pos_2.0, pos_2.1),(size_2.0, size_2.1)));
     }
-    ///Creates an additional layer containing a filled rectangle given the upper-left corner, its dimensions and
+    ///Draws a filled rectangle given the upper-left corner, its dimensions and
     ///its color
     pub fn draw_filled_rectangle(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
         let pos = (center.0-size.0/2, center.1-size.1/2);
@@ -134,7 +126,7 @@ impl Image {
         canva.layer = DynamicImage::ImageRgba8(new_canva);
         canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
     }
-    ///Creates an additional layer containing an empty rectangle given the upper-left corner, its dimensions and
+    ///Draws an empty rectangle given the upper-left corner, its dimensions and
     ///its color
     pub fn draw_empty_rectangle(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut size: (i32, i32), color: &Color, width: i32) {
         let pos_2 = ((center.0-size.0/2) as u32, (center.1-size.1/2) as u32);
@@ -155,6 +147,7 @@ impl Image {
         canva.layer = DynamicImage::ImageRgba8(new_canva);
         canva.layer_type = LayerType::Shape(((pos_2.0, pos_2.1),(size_2.0, size_2.1)));
     }
+    ///Creates an arrow pointing upward, given its center, size and color
     pub fn draw_filled_up_arrow(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
         let pos = (center.0-size.0/2, center.1-size.1/2);
         let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
@@ -164,6 +157,7 @@ impl Image {
         canva.layer = DynamicImage::ImageRgba8(new_canva);
         canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
     }
+    ///Creates an arrow pointing right, given its center, size and color
     pub fn draw_filled_right_arrow(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
         let pos = (center.0-size.0/2, center.1-size.1/2);
         let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
@@ -173,7 +167,8 @@ impl Image {
         canva.layer = DynamicImage::ImageRgba8(new_canva);
         canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
     }
-    pub fn draw_filled_left_arrow(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut size: (i32, i32), color: &Color) {
+    ///Creates an arrow pointing left, given its center, size and color
+    pub fn draw_filled_left_arrow(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
         let pos = (center.0-size.0/2, center.1-size.1/2);
         let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
         let arrow = Arrow::left_from_size(center, size);
@@ -182,7 +177,8 @@ impl Image {
         canva.layer = DynamicImage::ImageRgba8(new_canva);
         canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
     }
-    pub fn draw_filled_down_arrow(canva: &mut Layer, base: &mut Layer, center: (i32, i32), mut size: (i32, i32), color: &Color) {
+    ///Creates an arrow pointing downward, given its center, size and color
+    pub fn draw_filled_down_arrow(canva: &mut Layer, base: &mut Layer, center: (i32, i32), size: (i32, i32), color: &Color) {
         let pos = (center.0-size.0/2, center.1-size.1/2);
         let mut new_canva = RgbaImage::new(base.layer.width() as u32, base.layer.height() as u32);
         let arrow = Arrow::down_from_size(center, size);
@@ -190,20 +186,6 @@ impl Image {
         drawing::draw_polygon_mut(&mut new_canva, &poly.vertices, color.color);
         canva.layer = DynamicImage::ImageRgba8(new_canva);
         canva.layer_type = LayerType::Shape(((pos.0 as u32, pos.1 as u32),(size.0 as u32, size.1 as u32)));
-    }
-    ///Draws a line given the initial and final point and the color of the line
-    pub fn draw_line(&mut self, start: (i32, i32), end: (i32, i32), color: &Color) {
-        let mut layer = self.layers[0].clone();
-        let start = (start.0 as f32, start.1 as f32);
-        let end = (end.0 as f32, end.1 as f32);
-        drawing::draw_line_segment_mut(&mut layer, start, end, color.color);
-        self.layers.push_front(layer);
-    }
-    ///Draws a polygon given the color and the structure Polygon describing it
-    pub fn draw_polygon(&mut self, polygon: Polygon, color: &Color) {
-        let mut layer = self.layers[0].clone();
-        drawing::draw_polygon_mut(&mut layer, &polygon.vertices, color.color);
-        self.layers.push_front(layer);
     }
     ///Puts a text in the image given the text to write, its color, the position of the upper-left corner,
     ///the font and the font size 
@@ -214,14 +196,14 @@ impl Image {
     }
     ///Initializes a Layer for free-hand drawing. Return an empty layer on which
     ///it is possible to draw
-    pub fn free_hand_draw_init(&self) -> Layer{
+    pub fn free_hand_draw_init(&self) -> Layer {
         let layer = self.layers[0].clone();
         let layer = Layer::new(layer,LayerType::FreeHandDrawing);
         layer
     }
     ///Finalizes the free-hand drawing layer and puts it with the others. Takes as parameter the previously
     ///defines Layer used for drawing
-    pub fn free_hand_draw_set(&mut self, mut layer: Layer, last: (i32, i32), size: i32, color: &Color ) {
+    pub fn free_hand_draw_set(&mut self, layer: Layer, _last: (i32, i32), _size: i32, _color: &Color ) {
         self.layers.push_front(layer.layer);
     }
     ///Draws a point on a previously deifned Layer (returned by free_hand_draw_init) given the point position
@@ -324,9 +306,6 @@ impl Image {
                     let l0 = (l1.0-d.0, l1.1-d.1);
                     let r0 = (r1.0-d.0, r1.1-d.1);
 
-                    //let dist = f32::sqrt(f32::powi((l1.0-r1.0) as f32, 2)+f32::powi((l1.1-r1.1) as f32,2));
-                    //println!("{}",dist);
-
                     let points = Vec::from(
                         [
                             Point::new(l0.0, l0.1),
@@ -371,6 +350,8 @@ impl Image {
             }
         }
     }
+    ///Initializes a Layer for erasing. Return an empty layer on which
+    ///it is possible to use the rubber
     pub fn rubber_init(&self, last_crop_data: Option<((u32, u32),(u32, u32))>) -> (Layer, Layer) {
         let layer = self.layers[0].clone();
         let layer = Layer::new(layer,LayerType::BaseImage);
@@ -386,17 +367,17 @@ impl Image {
         let base = Layer::new(base,LayerType::FreeHandDrawing);
         (base, layer)
     }
-    pub fn rubber_set(&mut self, mut layer: Layer, base: &Layer, last: (i32, i32), size: i32) {
-        let color = Color::new(0, 0, 0, 0.0);
-        //imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, last, size/2, color.color);
+    ///Sets the rubber modification, finalizing them
+    pub fn rubber_set(&mut self, layer: Layer, base: &Layer, _last: (i32, i32), _size: i32) {
         let layer = layer.show_rubber(base);
         self.layers.push_front(layer);
     }
+    ///Erases part of the drawings
     pub fn rubber(layer: &mut Layer, prev: Option<((i32, i32),(i32, i32),(i32, i32))>, current: (i32, i32), size: i32) -> ((i32, i32), (i32, i32), (i32, i32)) {
         let color = Color::new(0, 0, 0, 0.0);
         Image::draw_point(layer, prev, current, size, &color)
     }
-
+    ///Initilizes a layer for higliting
     pub fn highlight_init(&self) -> (Layer, Layer) {
         let base = self.layers[0].clone();
         let base = Layer::new(base,LayerType::FreeHandDrawing);
@@ -406,11 +387,13 @@ impl Image {
         let canva = Layer::new(DynamicImage::ImageRgba8(canva), LayerType::BaseImage);
         (base, canva)
     }
-    pub fn highlight_set(&mut self, mut layer: Layer, base: &Layer, last: (i32, i32), size: i32, color: &Color) {
+    ///Sets the higlight layer, finalizing the modifications
+    pub fn highlight_set(&mut self, layer: Layer, base: &Layer, _last: (i32, i32), _size: i32, _color: &Color) {
         //imageproc::drawing::draw_filled_circle_mut(&mut layer.layer, last, size/2, color.color);
         let layer = layer.show_higlight(base);
         self.layers.push_front(layer);
     }
+    ///Higlights the layer
     pub fn highlight(layer: &mut Layer, prev: Option<((i32, i32),(i32, i32),(i32, i32))>, current: (i32, i32), size: i32, color: &Color) -> ((i32, i32), (i32, i32), (i32, i32)) {
         Image::draw_point(layer, prev, current, size, color)
     }
@@ -422,30 +405,11 @@ impl Image {
         }
         self.layers[0].clone()
     }
-    ///Saves the image given the extension. This is used if no name is provided and the given name is
-    ///unnamed_N, where N is an incremental counter starting from 0
-    pub fn save(&self, extension: Extensions) -> Result<(),ImageManipulationError> {
-
-        let path = match extension {
-            Extensions::JPG => {
-                format!("unnamed_{}.jpg",UNNAMED_COUNTER.fetch_add(1, Ordering::SeqCst))
-            }
-            Extensions::PNG => {
-                format!("unnamed_{}.png",UNNAMED_COUNTER.fetch_add(1, Ordering::SeqCst))
-            }
-            Extensions::GIF => {
-                format!("unnamed_{}.gif",UNNAMED_COUNTER.fetch_add(1, Ordering::SeqCst))
-            }
-        };
-        let _file = File::create(&path)?;
-        let image  = self.layers[0].clone();
-        image.save(path)?;
-        
-        Ok(())
-    }
     ///Saves the image given the extension and the name one want to give it. The name includes also 
     ///the path.
-    pub fn save_as(&self, location: &str, name: &str, extension: Extensions) -> Result<(), ImageManipulationError> {    let mut n;
+    ///If no name is given, the default one is used
+    pub fn save_as(&self, location: &str, name: &str, extension: Extensions) -> Result<(), ImageManipulationError> {    
+        let n;
         if name.len() == 0{
             n = match extension {
                 Extensions::JPG => {
@@ -476,8 +440,7 @@ impl Image {
         let image  = self.layers[0].clone();    image.save(path)?;
         Ok(())
     }
-    ///Returns the image with all the layers stacked
-    ///The original image is cloned, and all the layers are merged
+    ///Returns the current image
     pub fn show(&self) -> DynamicImage {
         self.layers[0].clone()
     }
@@ -493,7 +456,7 @@ impl Image {
         clipboard.set_image(image_cb)?;
         Ok(())
     }
-
+    ///Initilizes two layers for drawing shapes
     pub fn shape_init(&self, center: (u32, u32), size: (u32, u32)) -> (Layer, Layer) {
         let base = self.layers[0].clone();
         let width = base.width();
@@ -503,7 +466,7 @@ impl Image {
 
         (Layer::new(base,LayerType::BaseImage), Layer::new(DynamicImage::ImageRgba8(canva),LayerType::Shape((pos,size))))
     }
-
+    ///Finalizes the shape drawings
     pub fn shape_set(&mut self, base: Layer, shape_layer: Layer) {
         let image = shape_layer.draw_shape(&base);
         self.layers.push_front(image);
@@ -511,7 +474,7 @@ impl Image {
 
 }
 
-pub fn get_image(filepath: &str, ix: u32, iy: u32, iw: u32, ih: u32) -> egui::ImageData {
+pub fn get_image(filepath: &str, _ix: u32, _iy: u32, _iw: u32, _ih: u32) -> egui::ImageData {
     let fp = std::path::Path::new(filepath);
     let color_image = load_image_from_path(&fp).unwrap();
     std::fs::remove_file(".tmp.png").unwrap();
@@ -519,7 +482,7 @@ pub fn get_image(filepath: &str, ix: u32, iy: u32, iw: u32, ih: u32) -> egui::Im
     img
 }
 
-pub fn get_image_from_memory(di: DynamicImage, ix: u32, iy: u32, iw: u32, ih: u32) -> egui::ImageData {
+pub fn get_image_from_memory(di: DynamicImage, _ix: u32, _iy: u32, _iw: u32, _ih: u32) -> egui::ImageData {
     let color_image = load_image_from_memory(di).unwrap();
     let img = egui::ImageData::from(color_image);
     img

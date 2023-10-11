@@ -7,19 +7,17 @@ This Project was developed by:
 
 ## Creating a Screenshot Utility using the Rust Programming Language
 
-The aim is to create a screen grabbing utility capable of acquiring what is currently shown in a display, post-process it and make it available in one or more formats.
-The following features are to be included:
+The aim of this project is to create a screen-grabbing utility capable of acquiring what is currently shown in a display, post-process it and make it available in one or more formats.
+The following features are included:
 
-1. **Platform Support**: The utility should be compatible with multiple desktop operating systems, including Windows, macOS, and Linux.
-2. **User Interface (UI)**: The utility should have an intuitive and user-friendly interface that allows users to easily navigate through the application's features.
-3. **Selection Options**: The utility should allow the user to restrict the grabbed image to a custom area selected with a click and drag motion. The selected area may be further adjusted with subsequent interactions.
-4. **Hotkey Support**: The utility should support customizable hotkeys for quick screen grabbing. Users should be able to set up their preferred shortcut keys.
-5. **Output Format**: The utility should support multiple output formats including .png, .jpg, .gif. It should also support copying the screen grab to the clipboard.
-As a bonus, the application may also provide the following features:
-6. **Annotation Tools**: The utility should have built-in annotation tools like shapes, arrows, text, and a color picker for highlighting or redacting parts of the screen grab.
-7. **Delay Timer**: The utility should support a delay timer function, allowing users to set up a screen grab after a specified delay.
-8. **Save Options**: The utility should allow users to specify the default save location for screen grabs. It should also support automatic saving with predefined naming conventions.
-9. **Multi-monitor Support**: The utility should be able to recognize and handle
+1. **Platform Support**: The utility is compatible with multiple desktop operating systems, including Windows, macOS, and Linux.
+2. **Selection Options**: The utility allows the user to restrict the grabbed image to a custom area selected with a click and drag motion. The selected area may be further adjusted with subsequent interactions.
+3. **Hotkey Support**: The utility supports customizable hotkeys for quick screen grabbing. Users are able to set up their preferred shortcut keys.
+4. **Output Format**: The utility supports multiple output formats including .png, .jpg, .gif. It also support copying the screen grab to the clipboard.
+5. **Annotation Tools**: The utility has built-in annotation tools like shapes, arrows, text, and a color picker for highlighting or redacting parts of the screen grab.
+6. **Delay Timer**: The utility supports a delay timer function, allowing users to set up a screen grab after a specified delay.
+7. **Save Options**: The utility allows users to specify the default save location for screen grabs. It also supports automatic saving with predefined naming conventions.
+8. **Multi-monitor Support**: The utility is able to recognize and handle
 multiple monitors independently, allowing users to grab screens from any of the connected displays.
 
 ## Crates Depenedencies
@@ -27,7 +25,7 @@ multiple monitors independently, allowing users to grab screens from any of the 
 - screenshot crate: *screenshots*
     - [crates.io](https://crates.io/crates/screenshots)
     - [github](https://github.com/nashaofu/screenshots-rs)
-- gui crate: *egui*
+- gui crates: *egui*
     - [crates.io](https://crates.io/crates/egui)
     - [github](https://github.com/emilk/egui)
 - hotkeys crate: *global-hotkey*

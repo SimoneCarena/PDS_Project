@@ -3,20 +3,8 @@
 /*mod hotkey_popup;
 mod main_window;*/
 
-use std::collections::{HashMap, HashSet};
-use std::fmt::{Display, Formatter};
-use eframe::egui;
-use eframe::egui::scroll_area::ScrollBarVisibility;
-use global_hotkey::{hotkey::HotKey, GlobalHotKeyEvent, GlobalHotKeyManager};
+use global_hotkey::hotkey::HotKey;
 use keyboard_types::{Code, Modifiers};
-use crate::main_window::MyApp;
-
-#[derive(Clone, Hash)]
-pub enum OpName{
-    New,
-    Save,
-    Delay
-}
 
 #[derive(Clone, Hash)]
 pub struct Operation{
@@ -115,10 +103,6 @@ pub struct HotKeyPopUp {
 }
 
 impl HotKeyPopUp {
-
-    pub fn new() -> Self{
-        HotKeyPopUp{shortcuts: Vec::new()}
-    }
 
     pub fn initialize(shortcuts: Vec<Operation>) -> Self{
         HotKeyPopUp{shortcuts}
