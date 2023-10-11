@@ -22,7 +22,7 @@ pub fn hidden_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::F
         if app.all_screens{
             for screen in &app.screens{
                 match take_capture(screen) {
-                    None => {} // eventualmente da gestire
+                    None => {}
                     Some(im) => {
                         app.all_images.push(
                             ctx.load_texture(
@@ -41,7 +41,7 @@ pub fn hidden_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::F
         }
         else {
             match take_capture(&app.screens[app.sel_screen]) {
-                None => {} // eventualmente da gestire
+                None => {}
                 Some(im) => {
                     app.image = Some(ctx.load_texture(
                         "my-image",

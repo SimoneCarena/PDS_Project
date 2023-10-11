@@ -102,7 +102,7 @@ pub fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fr
                             }
                             app.save_name = String::new();
                         } else {
-                            panic!(); // da gestire
+                            panic!();
                         }
                     }
 
@@ -128,10 +128,8 @@ pub fn image_window(app: &mut MyApp, ctx: &egui::Context, frame: &mut eframe::Fr
                 });
 
                 // image logic (https://stackoverflow.com/questions/75728074/simplest-way-to-display-an-image-from-a-filepath)
-                //let screen_size = app.screens[0].get_size();
                 let window_size = Vec2::new(ctx.screen_rect().width() - 5.0, ctx.screen_rect().height() - 60.0);
                 let image_size = app.image.as_ref().unwrap().size_vec2();
-                //println!("{:?}  {:?}", (image_size.x, image_size.y), (window_size.x, window_size.y));
                 app.window_image_ratio = min_my(window_size.y / image_size.y, window_size.x / image_size.x);
 
 

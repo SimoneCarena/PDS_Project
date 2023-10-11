@@ -86,7 +86,6 @@ pub fn text_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                     None => {}
                     Some(pos) => {
                         let scroll = ctx.input(|i| i.scroll_delta).y;
-                        //println!("{:?}", scroll);
 
                         if app.is_ratio_along_y || (!app.is_ratio_along_y && (app.window_image_ratio>0.215 && app.window_image_ratio<0.23)){
                             app.scroll_qty = app.scroll_qty - scroll;
@@ -100,16 +99,12 @@ pub fn text_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                         else{
                             app.scroll_qty = 0.0;
                         }
-                        //println!("{}", app.window_image_ratio);
-                        //println!("{:?}", app.is_ratio_along_y);
 
                         if pos.x - offset > 0.0 && pos.x - offset < image_size.x * app.window_image_ratio
                             && pos.y+app.scroll_qty > 51.0 && pos.y+app.scroll_qty < (image_size.y * app.window_image_ratio + 51.0) && !app.any_pressed && !app.dropdown_on {
-                            //println!("Dentro");
                             match ctx.input(|i| i.pointer.any_pressed()) {
                                 true => {
                                     app.any_pressed = true;
-                                    //let start = (pos.x as i32, pos.y as i32);
 
                                     let start = cursor_position(((pos.x-offset) as u32, (pos.y-60.0+app.scroll_qty) as u32), app.window_image_ratio);
                                     let start = (start.0 as i32, start.1 as i32);
@@ -145,7 +140,6 @@ pub fn text_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                         app.prev = Text;
                         app.any_pressed = false;
                         app.image_text = String::from("Insert text here");
-                        //app.image_to_save.as_mut().unwrap().crop(app.bl_ar.take().unwrap());
                         app.backup_image = Some(ctx.load_texture(
                             "my-image",
                             get_image_from_memory(app.backup_image_to_save.as_ref().unwrap().show(), 0, 0, 1, 1),
@@ -171,8 +165,6 @@ pub fn text_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                             get_image_from_memory(di, 0, 0, 1, 1),
                             Default::default()
                         ));
-                        //app.image = app.backup_image.clone();
-                        //app.image_to_save = app.backup_image_to_save.clone();
                     }
 
                     if ui.add(egui::Button::new("Back")).clicked() {

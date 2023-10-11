@@ -13,11 +13,3 @@ impl Color {
         }
     }
 }
-
-pub fn convert_f32_u8(rgb: [f32;3]) -> [u8;3]{
-    [(rgb[0] * 255.0) as u8, (rgb[1] * 255.0) as u8, (rgb[2] * 255.0) as u8]
-}
-
-pub fn convert_u8_f32(rgb: [u8;3]) -> [f32;3]{
-    [(rgb[0] as f32)/255.0, (rgb[1] as f32)/255.0, (rgb[2] as f32)/255.0]
-}

@@ -138,7 +138,6 @@ pub fn settings_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe
                 ui.horizontal(|ui|{
                     ui.add_space(15.0);
                     ui.scope(|ui|{
-                        //ui.style_mut().visuals.widgets.hovered.bg_stroke.color = egui::Color32::WHITE;
                         ui.add(egui::TextEdit::singleline(&mut app.save_path_copy)).highlight();
                     });
                     let path = Path::new(&app.save_path_copy);

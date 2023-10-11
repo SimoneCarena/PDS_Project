@@ -313,8 +313,6 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                             app.scroll_qty = 0.0;
                         }
 
-                        //if pos.x - offset > 0.0 && pos.x - offset < image_size.x * app.window_image_ratio
-                        //&& pos.y > 25.0 && pos.y < (image_size.y * app.window_image_ratio + 25.0) && !app.any_pressed && !app.dropdown_on {
                         match app.draw_status {
                             DrawStatus::Draw | DrawStatus::Highlight | DrawStatus::Rubber => {
                                 if pos.x - offset > 0.0 && pos.x - offset < image_size.x * app.window_image_ratio
@@ -382,7 +380,6 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                                     0 => {
                                         if pos.x - offset > 0.0 && pos.x - offset < image_size.x * app.window_image_ratio
                                             && pos.y+app.scroll_qty > 50.0 && pos.y+app.scroll_qty < (image_size.y * app.window_image_ratio + 50.0) && !app.dropdown_on { //&& !app.any_pressed
-                                            //println!("Dentro");
                                             match ctx.input(|i| i.pointer.any_click()) {
                                                 true => {
                                                     app.any_pressed = true;
@@ -418,8 +415,6 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                                                         }
                                                     }
 
-                                                    //Image::draw_filled_rectangle(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), (300, 200), &app.draw_color);
-                                                    //Image::draw_filled_circle(app.draw_layer.as_mut().unwrap(), app.rubber_layer.as_mut().unwrap(), (start.0 as i32, start.1 as i32), 400, &app.draw_color);
                                                     di = app.draw_layer.as_ref().unwrap().show_shape(app.rubber_layer.as_ref().unwrap());
                                                     app.backup_image = Some(
                                                         ctx.load_texture("my-image",
@@ -446,8 +441,6 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                                         let downleft = (x, y + h);
                                         let downright = (x + w, y + h);
 
-                                        //println!("{:?}", (x+w, y+h));
-
                                         let c1 = cursor_position(upleft, 1.0 / app.window_image_ratio);
                                         let c1 = (c1.0 as f32, c1.1 as f32);
                                         let c2 = cursor_position(upright, 1.0 / app.window_image_ratio);
@@ -457,52 +450,39 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                                         let c4 = cursor_position(downright, 1.0 / app.window_image_ratio);
                                         let c4 = (c4.0 as f32, c4.1 as f32);
 
-                                        //println!("{:?} {}", pos, offset);
-                                        //println!("{:?} {:?} {:?} {:?}", c1, c2, c3, c4);
-
                                         //alto sx
                                         if (pos.x - offset > c1.0 -10.0 && pos.x - offset < c1.0 + 10.0) && (pos.y+app.scroll_qty - 50.0 > c1.1-10.0 && pos.y+app.scroll_qty - 50.0 < c1.1 + 10.0) {
-                                            //println!("Angolo!!");
                                             if ctx.input(|i| i.pointer.any_pressed()) {
                                                 app.any_pressed = true;
                                                 app.corner = Some(Corner::UpLeft);
-                                                //println!("pressed");
                                             }
                                         }
                                         //basso a sx
                                         else if (pos.x - offset > c3.0 -10.0 && pos.x - offset < c3.0 + 10.0) && ((pos.y+app.scroll_qty - 50.0 > c3.1 - 10.0) && (pos.y+app.scroll_qty - 50.0 < c3.1 + 10.0)) {
-                                            //println!("Angolo!!");
                                             if ctx.input(|i| i.pointer.any_pressed()) {
                                                 app.any_pressed = true;
                                                 app.corner = Some(Corner::DownLeft);
-                                                //println!("pressed");
                                             }
                                         }
                                         //alto a dx
                                         else if ((pos.x - offset > c2.0 - 10.0) && (pos.x - offset < c2.0 + 10.0)) && (pos.y+app.scroll_qty - 50.0 > c2.1 -10.0 && pos.y+app.scroll_qty - 50.0 < c2.1 + 10.0) {
-                                            //println!("Angolo!!");
                                             if ctx.input(|i| i.pointer.any_pressed()) {
                                                 app.corner = Some(Corner::UpRight);
                                                 app.any_pressed = true;
-                                                //println!("pressed");
                                             }
                                         }
                                         //basso a dx
                                         else if ((pos.x - offset > c4.0 - 10.0) && (pos.x - offset < c4.0 + 10.0)) && ((pos.y+app.scroll_qty - 50.0 > c4.1 - 10.0) && (pos.y+app.scroll_qty - 50.0 < c4.1 + 10.0)) {
-                                            //println!("Angolo!!");
                                             if ctx.input(|i| i.pointer.any_pressed()) {
                                                 app.corner = Some(Corner::DownRight);
                                                 app.any_pressed = true;
-                                                //println!("pressed");
                                             }
                                         }
                                         //centro
                                         else if ((pos.x - offset > c1.0 + 10.0) && (pos.x - offset < c4.0 - 10.0)) && ((pos.y+app.scroll_qty - 50.0 > c1.1 +10.0) && (pos.y+app.scroll_qty - 50.0 < c4.1 - 10.0)) {
-                                            //println!("Interno!!");
                                             if ctx.input(|i| i.pointer.any_pressed()) {
                                                 app.corner = Some(Corner::Centre);
                                                 app.any_pressed = true;
-                                                //println!("pressed");
                                             }
                                         }
 
@@ -521,8 +501,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                                             match app.prev_mouse_pos {
                                                 None => {}
                                                 Some(_p) => {
-                                                    let ((x, y), (w, h)) = app.draw_layer.as_ref().unwrap().get_pos_size().unwrap();  //app.bl_ar.as_ref().unwrap().get_crop_data();
-                                                    //println!("{:?} {:?}", app.prev_mouse_pos.unwrap(), app.cur_mouse_pos.unwrap());
+                                                    let ((x, y), (w, h)) = app.draw_layer.as_ref().unwrap().get_pos_size().unwrap();
                                                     let ((xn, yn), (wn, hn)) = match app.which_shape.as_ref().unwrap() {
                                                         Shape::FilledCircle | Shape::EmptyCircle => {
                                                             get_new_area_circle(
@@ -545,17 +524,6 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                                                             )
                                                         }
                                                     };
-
-                                                    //println!("{:?}", (wn,hn));
-
-                                                    /*let ((xn, yn), (wn, hn)) = get_new_area_circle(
-                                                    app.prev_mouse_pos.unwrap(),
-                                                    app.cur_mouse_pos.unwrap(),
-                                                    (x, y),
-                                                    w,
-                                                    (app.image_to_save.as_ref().unwrap().width(), app.image_to_save.as_ref().unwrap().height()),
-                                                    app.corner.unwrap()
-                                                );*/
 
                                                     match app.which_shape.unwrap() {
                                                         Shape::FilledRectangle => Image::draw_filled_rectangle(app.draw_layer.as_mut().unwrap(),
@@ -594,12 +562,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                                                         }
                                                     }
 
-                                                    /*Image::draw_filled_circle(app.draw_layer.as_mut().unwrap(),
-                                                                          app.rubber_layer.as_mut().unwrap(),
-                                                                          ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
-                                                                          wn as i32, &app.draw_color);*/
-
-                                                    let di = app.draw_layer.as_ref().unwrap().show_shape(app.rubber_layer.as_ref().unwrap());    //app.bl_ar.as_ref().unwrap().show();
+                                                    let di = app.draw_layer.as_ref().unwrap().show_shape(app.rubber_layer.as_ref().unwrap());
 
                                                     app.backup_image = Some(ctx.load_texture(
                                                         "my-image",
@@ -614,7 +577,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                                                     let (x, y) = cursor_position(((pos.x - offset) as u32, (pos.y+app.scroll_qty-50.0) as u32), 1.0 / app.window_image_ratio);
                                                     app.anchor_corner = Some(((x as f32, y as f32), app.window_image_ratio));
                                                 }
-                                                _ => {} //inutile
+                                                _ => {}
                                             }
                                         }
 
@@ -629,7 +592,6 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                                 }
                             },
                         }
-                        //}
                     }
                 }
 

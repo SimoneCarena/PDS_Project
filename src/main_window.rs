@@ -110,7 +110,6 @@ pub struct MyApp {
     delay_secs_cp: u32,
     save_name: String,
     clipboard: arboard::Clipboard,
-    //pointer: egui::PointerState,
     hk_num: usize,
     any_pressed: bool,
     sel_screen: usize,
@@ -137,8 +136,6 @@ pub struct MyApp {
     highlight: bool,
     rubber_layer: Option<Layer>,
     last_crop_data: Option<((u32, u32), (u32, u32))>,
-    //shape: bool,
-    //shape_pressed: u8,
     draw_status: DrawStatus,
     pencil_rubber_thickness: i32,
     draw_color: Color,
@@ -166,13 +163,12 @@ impl MyApp {
             delay_secs: 3u32, delay_secs_cp: 3u32,
             save_name: String::new(),
             clipboard: arboard::Clipboard::new().unwrap(),
-            //pointer: egui::PointerState::default(),
             hk_num: 7usize,
             forbidden_hk: vec![false; 7usize],
             any_pressed: false,
             sel_screen: 0usize,
             all_screens: false,
-            window_image_ratio: 0.2,  //default
+            window_image_ratio: 0.2,
             is_ratio_along_y: true,
             scroll_qty: 0.0,
             corner: None,
@@ -194,8 +190,6 @@ impl MyApp {
             highlight: false,
             rubber_layer: None,
             last_crop_data: None,
-            //shape: false,
-            //shape_pressed: 0u8,
             draw_status: DrawStatus::default(),
             pencil_rubber_thickness: 5,
             draw_color: Color::new(255, 0, 0, 1.0),
@@ -280,16 +274,8 @@ impl MyApp {
                     }
                 }
             }
-            Err(_) => {} // non si fa nulla
+            Err(_) => {}
         }
-
-        /*ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyA)).unwrap();
-        ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyB)).unwrap();
-        ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyC)).unwrap();
-        ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyD)).unwrap();
-        ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyE)).unwrap();
-        ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyF)).unwrap();
-        ret.manager_hk.register(HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyG)).unwrap();*/
 
         ret.fonts = Some(match load_fonts(){
             Ok(x) => {x}
@@ -299,7 +285,7 @@ impl MyApp {
                         y
                     }
                     Err(_) => {
-                        panic!(); //todo()!
+                        panic!();
                     }
                 }
             }
@@ -404,7 +390,7 @@ impl eframe::App for MyApp {
                                     }
                                     self.save_name = String::new();
                                 } else {
-                                    panic!(); // da gestire
+                                    panic!();
                                 }
                             }
                         },
@@ -472,7 +458,7 @@ impl eframe::App for MyApp {
                 ).as_bytes()).unwrap();
                 f.write_all(format!("{}\n", self.save_path).as_bytes()).unwrap();
             }
-            Err(_) => {} // non si fa nulla
+            Err(_) => {}
         }
     }
 }
