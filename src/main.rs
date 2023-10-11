@@ -1,5 +1,3 @@
-//#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
-
 mod hotkey_popup;
 mod main_window;
 mod screensh;
@@ -8,35 +6,10 @@ mod cursor_scaling;
 mod load_fonts;
 mod load_assets;
 
-
-use std::collections::{HashMap, HashSet};
-use std::fmt::{Display, Formatter};
-use std::fs;
-use std::io::Write;
 use eframe::egui;
-//use eframe::epaint::image;
-//use eframe::egui::accesskit::Role::Status;
-use global_hotkey::{hotkey::HotKey, GlobalHotKeyEvent, GlobalHotKeyManager};
-use keyboard_types::{Code, Modifiers};
 use crate::main_window::*;
-use crate::hotkey_popup::*;
-
-
 
 fn main() -> Result<(), eframe::Error> {
-    //let manager = GlobalHotKeyManager::new().unwrap();
-
-    /*let hotkey1: HotKey = "shift+alt+KeyA".parse().unwrap();
-    let hotkey4 = HotKey::new(Some(Modifiers::SHIFT | Modifiers::ALT), Code::KeyC);*/
-
-    /*println!("{}", hotkey.id());
-    println!("{}", hotkey2.id());
-    println!("{}", hotkey3.id());
-    println!("{}", hotkey4.id()); */
-
-    /*manager.register(hotkey1).unwrap();
-    manager.register(hotkey4).unwrap();*/
-    //return Ok(());
 
     let native_options = eframe::NativeOptions{
         resizable: true,
@@ -71,10 +44,4 @@ fn load_icon(path: &str) -> eframe::IconData {
         height: icon_height,
     }
 }
-
-/*impl Display for Code{
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-
-    }
-}*/
 

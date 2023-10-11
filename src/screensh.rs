@@ -3,7 +3,6 @@ pub mod screensh_errors;
 use std::fs::File;
 use std::io::Write;
 use screensh_errors::ScreenshotError;
-use eframe::egui::Vec2;
 
 pub struct Screen {
     screen: screenshots::Screen,
@@ -38,12 +37,6 @@ impl Screen {
             } 
             Err(_) => Err(ScreenshotError::ScreenCaptureError)
         }
-    }
-    pub fn get_size(&self) -> Vec2 {
-        Vec2::new(
-            self.screen.display_info.height as f32,
-            self.screen.display_info.width as f32
-        )
     }
     
 }
