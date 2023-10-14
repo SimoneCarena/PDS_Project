@@ -3,11 +3,10 @@ use eframe::egui::scroll_area::ScrollBarVisibility;
 use eframe::egui::{Vec2};
 use crate::main_window::Status::*;
 use crate::cursor_scaling::*;
+use crate::image_proc;
 use crate::image_proc::{get_image_from_memory};
 use crate::image_proc::Image;
 use crate::main_window::{DrawStatus, min_my, MyApp, Pointing, Shape};
-
-// si usa backup
 
 pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Frame){
 
@@ -37,7 +36,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                             match app.draw_status {
                                 DrawStatus::Shape(1) => {
                                     app.backup_image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
-                                    let di = app.image_to_save.as_ref().unwrap().show();
+                                    let di = app.backup_image_to_save.as_ref().unwrap().show();
                                     app.backup_image = Some(ctx.load_texture(
                                         "my-image",
                                         get_image_from_memory(di, 0, 0, 1, 1),
@@ -48,6 +47,14 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                             }
                         }
 
+                        /*match app.draw_layer.as_ref(){
+                            None => {}
+                            Some(_) => {
+                                app.backup_image_to_save.as_mut().unwrap().free_hand_draw_set(
+                                    app.draw_layer.clone().unwrap(), (0,0), 0,
+                                    &image_proc::colors::Color::new(0,0,0,0.0));
+                            }
+                        }*/
                         let dl = app.backup_image_to_save.as_ref().unwrap().free_hand_draw_init();
                         app.draw_layer = Some(dl);
                         app.draw_status = DrawStatus::Draw;
