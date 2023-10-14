@@ -56,7 +56,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                             match app.draw_status {
                                 DrawStatus::Shape(1) => {
                                     app.backup_image_to_save.as_mut().unwrap().shape_set(app.rubber_layer.take().unwrap(), app.draw_layer.take().unwrap());
-                                    let di = app.image_to_save.as_ref().unwrap().show();
+                                    let di = app.backup_image_to_save.as_ref().unwrap().show();
                                     app.backup_image = Some(ctx.load_texture(
                                         "my-image",
                                         get_image_from_memory(di, 0, 0, 1, 1),
