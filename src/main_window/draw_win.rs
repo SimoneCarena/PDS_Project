@@ -1,10 +1,9 @@
 use eframe::egui;
 use eframe::egui::scroll_area::ScrollBarVisibility;
-use eframe::egui::{Vec2};
+use eframe::egui::Vec2;
 use crate::main_window::Status::*;
 use crate::cursor_scaling::*;
-use crate::image_proc;
-use crate::image_proc::{get_image_from_memory};
+use crate::image_proc::get_image_from_memory;
 use crate::image_proc::Image;
 use crate::main_window::{DrawStatus, min_my, MyApp, Pointing, Shape};
 
@@ -133,6 +132,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                         }
                         app.which_shape = Some(Shape::FilledRectangle);
                         app.draw_status = DrawStatus::Shape(0);
+                        app.cur_mouse_pos = None;
                     }
 
                     if ui.button("⬜").on_hover_text("Empty rectangle").clicked() {
@@ -152,6 +152,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                         }
                         app.which_shape = Some(Shape::EmptyRectangle);
                         app.draw_status = DrawStatus::Shape(0);
+                        app.cur_mouse_pos = None;
                     }
 
                     if ui.button("⏺").on_hover_text("Filled circle").clicked() {
@@ -171,6 +172,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                         }
                         app.which_shape = Some(Shape::FilledCircle);
                         app.draw_status = DrawStatus::Shape(0);
+                        app.cur_mouse_pos = None;
                     }
 
                     if ui.button("○").on_hover_text("Empty circle").clicked() {
@@ -190,6 +192,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                         }
                         app.which_shape = Some(Shape::EmptyCircle);
                         app.draw_status = DrawStatus::Shape(0);
+                        app.cur_mouse_pos = None;
                     }
 
                     if ui.button("⬅").on_hover_text("Left arrow").clicked() {
@@ -209,6 +212,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                         }
                         app.which_shape = Some(Shape::Arrow(Pointing::Left));
                         app.draw_status = DrawStatus::Shape(0);
+                        app.cur_mouse_pos = None;
                     }
 
                     if ui.button("➡").on_hover_text("Right arrow").clicked() {
@@ -228,6 +232,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                         }
                         app.which_shape = Some(Shape::Arrow(Pointing::Right));
                         app.draw_status = DrawStatus::Shape(0);
+                        app.cur_mouse_pos = None;
                     }
 
                     if ui.button("⬆").on_hover_text("Up arrow").clicked() {
@@ -247,6 +252,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                         }
                         app.which_shape = Some(Shape::Arrow(Pointing::Up));
                         app.draw_status = DrawStatus::Shape(0);
+                        app.cur_mouse_pos = None;
                     }
 
                     if ui.button("⬇").on_hover_text("Down arrow").clicked() {
@@ -266,6 +272,7 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                         }
                         app.which_shape = Some(Shape::Arrow(Pointing::Down));
                         app.draw_status = DrawStatus::Shape(0);
+                        app.cur_mouse_pos = None;
                     }
 
 
