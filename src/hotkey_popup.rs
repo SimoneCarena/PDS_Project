@@ -1,5 +1,3 @@
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
-
 use global_hotkey::hotkey::HotKey;
 use keyboard_types::{Code, Modifiers};
 
