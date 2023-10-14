@@ -46,14 +46,6 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                             }
                         }
 
-                        /*match app.draw_layer.as_ref(){
-                            None => {}
-                            Some(_) => {
-                                app.backup_image_to_save.as_mut().unwrap().free_hand_draw_set(
-                                    app.draw_layer.clone().unwrap(), (0,0), 0,
-                                    &image_proc::colors::Color::new(0,0,0,0.0));
-                            }
-                        }*/
                         let dl = app.backup_image_to_save.as_ref().unwrap().free_hand_draw_init();
                         app.draw_layer = Some(dl);
                         app.draw_status = DrawStatus::Draw;
