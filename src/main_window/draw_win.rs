@@ -7,6 +7,7 @@ use crate::image_proc::{get_image_from_memory};
 use crate::image_proc::Image;
 use crate::main_window::{DrawStatus, min_my, MyApp, Pointing, Shape};
 
+// si usa backup
 
 pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Frame){
 
@@ -46,7 +47,9 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                                 _ => {}
                             }
                         }
-                        app.draw_layer = Some(app.image_to_save.as_ref().unwrap().free_hand_draw_init());
+
+                        let dl = app.backup_image_to_save.as_ref().unwrap().free_hand_draw_init();
+                        app.draw_layer = Some(dl);
                         app.draw_status = DrawStatus::Draw;
                     }
                     if ui.button("🗑 Erase").on_hover_text("Erase annotations").clicked() {
