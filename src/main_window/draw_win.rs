@@ -96,12 +96,19 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
 
                     match app.draw_status{
                         DrawStatus::Draw | DrawStatus::Rubber => {
-                            ui.add(egui::Slider::new(&mut app.pencil_rubber_thickness, 1..=60).text("Trait size"));
+                            ui.add(egui::Slider::new(&mut app.pencil_rubber_thickness, 1..=80).text("Trait size"));
                         }
                         DrawStatus::Highlight => {
                             ui.add(egui::Slider::new(&mut app.highlight_thickness, 20..=80).text("Trait size"));
                         }
-                        DrawStatus::Shape(_) => {}
+                        DrawStatus::Shape(_) => {
+                            match app.which_shape.as_ref().unwrap(){
+                                Shape::EmptyRectangle | Shape::EmptyCircle => {
+                                    ui.add(egui::Slider::new(&mut app.pencil_rubber_thickness, 1..=80).text("Trait size"));
+                                }
+                                _ => {}
+                            }
+                        }
                     }
 
                 });
@@ -589,12 +596,64 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                                                 _ => {}
                                             }
                                         }
+                                            // da tagliare eventualmente
+                                        else{
+
+                                            let ((x, y), (w, h)) = app.draw_layer.as_ref().unwrap().get_pos_size().unwrap();
+                                            let ((xn, yn), (wn, hn)) = ((x,y), (w,h));
+                                            match app.which_shape.unwrap() {
+                                                Shape::FilledRectangle => Image::draw_filled_rectangle(app.draw_layer.as_mut().unwrap(),
+                                                                                                       app.rubber_layer.as_mut().unwrap(),
+                                                                                                       ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                                                       (wn as i32, hn as i32), &app.draw_color),
+                                                Shape::EmptyRectangle => Image::draw_empty_rectangle(app.draw_layer.as_mut().unwrap(),
+                                                                                                     app.rubber_layer.as_mut().unwrap(),
+                                                                                                     ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                                                     (wn as i32, hn as i32), &app.draw_color, app.pencil_rubber_thickness),
+                                                Shape::FilledCircle => Image::draw_filled_circle(app.draw_layer.as_mut().unwrap(),
+                                                                                                 app.rubber_layer.as_mut().unwrap(),
+                                                                                                 ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                                                 wn as i32, &app.draw_color),
+                                                Shape::EmptyCircle => Image::draw_empty_circle(app.draw_layer.as_mut().unwrap(),
+                                                                                               app.rubber_layer.as_mut().unwrap(),
+                                                                                               ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                                               wn as i32, &app.draw_color, app.pencil_rubber_thickness),
+                                                Shape::Arrow(dir) => match dir {
+                                                    Pointing::Left => Image::draw_filled_left_arrow(app.draw_layer.as_mut().unwrap(),
+                                                                                                    app.rubber_layer.as_mut().unwrap(),
+                                                                                                    ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                                                    (wn as i32, hn as i32), &app.draw_color),
+                                                    Pointing::Right => Image::draw_filled_right_arrow(app.draw_layer.as_mut().unwrap(),
+                                                                                                      app.rubber_layer.as_mut().unwrap(),
+                                                                                                      ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                                                      (wn as i32, hn as i32), &app.draw_color),
+                                                    Pointing::Up => Image::draw_filled_up_arrow(app.draw_layer.as_mut().unwrap(),
+                                                                                                app.rubber_layer.as_mut().unwrap(),
+                                                                                                ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                                                (wn as i32, hn as i32), &app.draw_color),
+                                                    Pointing::Down => Image::draw_filled_down_arrow(app.draw_layer.as_mut().unwrap(),
+                                                                                                    app.rubber_layer.as_mut().unwrap(),
+                                                                                                    ((xn + wn / 2) as i32, (yn + hn / 2) as i32),
+                                                                                                    (wn as i32, hn as i32), &app.draw_color),
+                                                }
+                                            }
+
+                                            let di = app.draw_layer.as_ref().unwrap().show_shape(app.rubber_layer.as_ref().unwrap());
+
+                                            app.backup_image = Some(ctx.load_texture(
+                                                "my-image",
+                                                get_image_from_memory(di, 0, 0, 1, 1),
+                                                Default::default()
+                                            ));
+
+                                        }
 
                                         if ctx.input(|i| i.pointer.any_released()) && app.any_pressed {
                                             app.any_pressed = false;
                                             app.corner = None;
                                             app.prev_mouse_pos = None;
                                             app.cur_mouse_pos = None;
+
                                         }
                                     }
                                     _ => {}
