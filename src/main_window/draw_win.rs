@@ -596,7 +596,6 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                                                 _ => {}
                                             }
                                         }
-                                            // da tagliare eventualmente
                                         else{
 
                                             let ((x, y), (w, h)) = app.draw_layer.as_ref().unwrap().get_pos_size().unwrap();
