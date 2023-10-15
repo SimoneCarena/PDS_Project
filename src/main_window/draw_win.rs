@@ -95,13 +95,19 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                     }
 
                     match app.draw_status{
-                        DrawStatus::Draw | DrawStatus::Rubber => {
+                        DrawStatus::Draw | DrawStatus::Rubber | DrawStatus::Shape(0) => {
                             ui.add(egui::Slider::new(&mut app.pencil_rubber_thickness, 1..=60).text("Trait size"));
                         }
                         DrawStatus::Highlight => {
                             ui.add(egui::Slider::new(&mut app.highlight_thickness, 20..=80).text("Trait size"));
                         }
-                        DrawStatus::Shape(_) => {}
+                        DrawStatus::Shape(1) => {
+                            ui.scope(|ui| {
+                                ui.set_enabled(false);
+                                ui.add(egui::Slider::new(&mut app.pencil_rubber_thickness, 1..=60).text("Trait size"));
+                            });
+                        }
+                        _ => {}
                     }
 
                 });
