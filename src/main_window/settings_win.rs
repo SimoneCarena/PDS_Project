@@ -32,7 +32,7 @@ pub fn settings_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe
                         ui.checkbox(app.hk_copy.get_shortcuts(i).get_mut_ctrl(), "")
                             .labelled_by(control_label.id);
 
-                        egui::ComboBox::from_label(format!("KEY-CODE {}:", i)).width(5.0)
+                        egui::ComboBox::from_label(format!("> KEY-CODE {}", i)).width(5.0)
                             .selected_text(format!("{:?}", app.hk_copy.get_shortcuts(i).get_immut_selkey()))
                             .show_ui(ui, |ui| {
                                 ui.selectable_value(app.hk_copy.get_shortcuts(i).get_mut_selkey(), Code::KeyQ, "q");
@@ -65,23 +65,6 @@ pub fn settings_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe
 
                         let (_id, _str, hotk) = app.hk_copy.get_shortcuts(i).id_gen();
 
-                        /*if app.forbidden_hk[i]{
-                            ui.scope(|ui|{
-                                ui.style_mut().visuals.override_text_color = Some(egui::Color32::LIGHT_RED);
-                                ui.label("Combination already in use; please select another one");
-                            });
-                        }*/
-
-                        if i==1{
-                            egui::ComboBox::from_label(format!("Capture Delay:",)).width(5.0)
-                                .selected_text(format!("{}", app.delay_secs_cp))
-                                .show_ui(ui, |ui| {
-                                    ui.selectable_value(&mut app.delay_secs_cp, 3u32, "3");
-                                    ui.selectable_value(&mut app.delay_secs_cp, 5u32, "5");
-                                    ui.selectable_value(&mut app.delay_secs_cp, 10u32, "10");
-                                });
-                        }
-
 
                         if ui.add(egui::Button::new("OK")).clicked() {
                             let alt = app.hk_copy.get_shortcuts(i).get_immut_alt().clone();
@@ -113,8 +96,22 @@ pub fn settings_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe
                         }
                     });
 
+                    if i==1{
+                        ui.horizontal(|ui|{
+                            ui.add_space(15.0);
+                            egui::ComboBox::from_label(format!("> Capture Delay", )).width(5.0)
+                                .selected_text(format!("{}", app.delay_secs_cp))
+                                .show_ui(ui, |ui| {
+                                    ui.selectable_value(&mut app.delay_secs_cp, 3u32, "3");
+                                    ui.selectable_value(&mut app.delay_secs_cp, 5u32, "5");
+                                    ui.selectable_value(&mut app.delay_secs_cp, 10u32, "10");
+                                });
+                        });
+                    }
+
                     if app.forbidden_hk[i]{
-                        ui.scope(|ui|{
+                        ui.horizontal(|ui|{
+                            ui.add_space(15.0);
                             ui.style_mut().visuals.override_text_color = Some(egui::Color32::LIGHT_RED);
                             ui.label("Combination already in use; please select another one");
                         });
