@@ -26,7 +26,6 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                     app.is_ratio_along_y = false;
                 }
 
-
                 ui.horizontal(|ui| {
                     ui.style_mut().visuals.override_text_color = Some(egui::Color32::WHITE);
                     if ui.button("✏ Draw").on_hover_text("Free-hand drawing").clicked() {
@@ -300,8 +299,6 @@ pub fn draw_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe::Fr
                                 app.highlight_color.color.0[2] = color_vec[2];
                             }
                         }
-
-
 
                         if ui.add(egui::Button::new("OK")).clicked() {
                             app.is_sel_color = false;

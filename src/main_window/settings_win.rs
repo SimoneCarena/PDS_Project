@@ -65,12 +65,12 @@ pub fn settings_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe
 
                         let (_id, _str, hotk) = app.hk_copy.get_shortcuts(i).id_gen();
 
-                        if app.forbidden_hk[i]{
+                        /*if app.forbidden_hk[i]{
                             ui.scope(|ui|{
                                 ui.style_mut().visuals.override_text_color = Some(egui::Color32::LIGHT_RED);
                                 ui.label("Combination already in use; please select another one");
                             });
-                        }
+                        }*/
 
                         if i==1{
                             egui::ComboBox::from_label(format!("Capture Delay:",)).width(5.0)
@@ -113,6 +113,12 @@ pub fn settings_window(app: &mut MyApp, ctx: &egui::Context, _frame: &mut eframe
                         }
                     });
 
+                    if app.forbidden_hk[i]{
+                        ui.scope(|ui|{
+                            ui.style_mut().visuals.override_text_color = Some(egui::Color32::LIGHT_RED);
+                            ui.label("Combination already in use; please select another one");
+                        });
+                    }
 
                 }
 
